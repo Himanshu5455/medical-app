@@ -29,7 +29,8 @@ import {
   nextQuestion,
   completeQuestionnaire,
   loadFromStorage,
-  resetQuestionnaire
+  resetQuestionnaire,
+  setCurrentQuestion
 } from '../store/questionnaireSlice';
 import { QUESTIONS } from '../data/questions';
 
@@ -55,6 +56,8 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
   const [isStreamingActive, setIsStreamingActive] = useState(false);
   // When true, hide input while waiting for user confirmation after summary
   const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(false);
+  // If true, after editing a field jump back to summary instead of continuing
+  const [isReturnToSummary, setIsReturnToSummary] = useState(false);
 
   // Handler for when streaming completes
   const handleStreamingComplete = () => {
@@ -213,6 +216,81 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
     value: value
   }));
 
+  // If we are editing from summary, regenerate summary immediately and skip normal progression
+  if (isReturnToSummary) {
+    const thinkingMessageId = Date.now();
+    dispatch(addToChatHistory({
+      type: 'bot',
+      message: '',
+      isTyping: true,
+      timestamp: new Date().toISOString(),
+      questionId: `thinking-${thinkingMessageId}`
+    }));
+
+    setTimeout(() => {
+      dispatch(removeToChatHistory(`thinking-${thinkingMessageId}`));
+      setIsStreamingActive(true);
+
+      let savedName = (answers?.name ?? '');
+      let savedEmail = (answers?.email ?? '');
+      let savedPhone = (answers?.phone ?? '');
+      let savedDob = (answers?.dob ?? '');
+      let savedReferral = (answers?.refer_physician_name || answers?.physician || '');
+      let savedReasonValue = (answers?.referral_reason ?? '');
+
+      try {
+        const savedDataRaw = localStorage.getItem('questionnaire');
+        if (savedDataRaw) {
+          const savedData = JSON.parse(savedDataRaw);
+          const a = savedData?.answers || {};
+          savedName = a.name ?? savedName;
+          savedEmail = a.email ?? savedEmail;
+          savedPhone = a.phone ?? savedPhone;
+          savedDob = a.dob ?? savedDob;
+          savedReferral = a.refer_physician_name || a.physician || savedReferral;
+          savedReasonValue = a.referral_reason ?? savedReasonValue;
+        }
+      } catch (e) {}
+
+      let savedReasonLabel = savedReasonValue;
+      try {
+        const reasonQ = QUESTIONS.find(q => q.id === 'referral_reason');
+        if (reasonQ && Array.isArray(reasonQ.options)) {
+          const opt = reasonQ.options.find(o => o.value === savedReasonValue);
+          if (opt) savedReasonLabel = opt.label;
+        }
+      } catch {}
+
+      const summaryLines = [
+        `Great! I have received your information.`,
+        `Full name: ${savedName || 'N/A'}`,
+        `Email: ${savedEmail || 'N/A'}`,
+        `Phone: ${savedPhone || 'N/A'}`,
+        `DOB: ${savedDob || 'N/A'}`,
+        `Referral: ${savedReferral || 'N/A'}`,
+        `Reason: ${savedReasonLabel || 'N/A'}`,
+        ``,
+        `Is that correct?`
+      ];
+      const summaryText = summaryLines.join('\n');
+      dispatch(addToChatHistory({
+        type: 'bot',
+        message: summaryText,
+        timestamp: new Date().toISOString(),
+        questionId: 'summary-info',
+        shouldStream: true,
+        options: [
+          { value: 'confirm_summary', label: 'Yes, everything is correct' },
+          { value: 'edit_summary', label: 'No, edit my info' }
+        ]
+      }));
+    }, 800);
+
+    setIsAwaitingConfirmation(true);
+    // Ensure we don't continue normal flow
+    return;
+  }
+
   // ✅ Recalculate visible questions AFTER saving answer
   const updatedVisibleQuestions = getVisibleQuestions({
     ...answers,
@@ -276,8 +354,64 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
 
       setIsStreamingActive(true);
       
-      // If the last answered question was file upload, add a summary message from localStorage
-      if (question.id === 'files') {
+      // If returning to summary after an edit, regenerate and ask again
+      if (isReturnToSummary) {
+        let savedName = answers?.name || '';
+        let savedEmail = answers?.email || '';
+        let savedPhone = answers?.phone || '';
+        let savedDob = answers?.dob || '';
+        let savedReferral = answers?.refer_physician_name || answers?.physician || '';
+        let savedReasonValue = answers?.referral_reason || '';
+        try {
+          const savedDataRaw = localStorage.getItem('questionnaire');
+          if (savedDataRaw) {
+            const savedData = JSON.parse(savedDataRaw);
+            const a = savedData?.answers || {};
+            savedName = a.name || savedName;
+            savedEmail = a.email || savedEmail;
+            savedPhone = a.phone || savedPhone;
+            savedDob = a.dob || savedDob;
+            savedReferral = a.refer_physician_name || a.physician || savedReferral;
+            savedReasonValue = a.referral_reason || savedReasonValue;
+          }
+        } catch (e) {}
+
+        let savedReasonLabel = savedReasonValue;
+        try {
+          const reasonQ = QUESTIONS.find(q => q.id === 'referral_reason');
+          if (reasonQ && Array.isArray(reasonQ.options)) {
+            const opt = reasonQ.options.find(o => o.value === savedReasonValue);
+            if (opt) savedReasonLabel = opt.label;
+          }
+        } catch {}
+
+        const summaryLines = [
+          `Great! I have received your information.`,
+          `Full name: ${savedName || 'N/A'}`,
+          `Email: ${savedEmail || 'N/A'}`,
+          `Phone: ${savedPhone || 'N/A'}`,
+          `DOB: ${savedDob || 'N/A'}`,
+          `Referral: ${savedReferral || 'N/A'}`,
+          `Reason: ${savedReasonLabel || 'N/A'}`,
+          ``,
+          `Is that correct?`
+        ];
+        const summaryText = summaryLines.join('\n');
+        dispatch(addToChatHistory({
+          type: 'bot',
+          message: summaryText,
+          timestamp: new Date().toISOString(),
+          questionId: 'summary-info',
+          shouldStream: true,
+          options: [
+            { value: 'confirm_summary', label: 'Yes, everything is correct' },
+            { value: 'edit_summary', label: 'No, edit my info' }
+          ]
+        }));
+        setIsAwaitingConfirmation(true);
+        setIsReturnToSummary(false);
+      } else if (question.id === 'files') {
+        // If the last answered question was file upload, add a summary message from localStorage
         let savedName = answers?.name || '';
         let savedEmail = answers?.email || '';
         let savedPhone = answers?.phone || '';
@@ -329,7 +463,8 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
           questionId: 'summary-info',
           shouldStream: true,
           options: [
-            { value: 'confirm_summary', label: 'Yes, everything is correct' }
+            { value: 'confirm_summary', label: 'Yes, everything is correct' },
+            { value: 'edit_summary', label: 'No, edit my info' }
           ]
         }));
         // Hide the input while awaiting user confirmation
@@ -397,6 +532,38 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
           setIsAwaitingConfirmation(false);
         }, 1200);
       }, 800);
+      return;
+    }
+
+    // Handle request to edit from summary
+    if (questionId === 'summary-info' && value === 'edit_summary') {
+      setIsReturnToSummary(true);
+      dispatch(addToChatHistory({
+        type: 'bot',
+        message: 'Which detail would you like to update?',
+        timestamp: new Date().toISOString(),
+        questionId: 'edit-fields',
+        shouldStream: true,
+        options: [
+          { value: 'name', label: 'Full name' },
+          { value: 'email', label: 'Email' },
+          { value: 'phone', label: 'Phone' },
+          { value: 'dob', label: 'DOB' },
+          { value: 'physician', label: 'Referral' },
+          { value: 'referral_reason', label: 'Reason' }
+        ]
+      }));
+      return;
+    }
+
+    // Handle field selection to edit
+    if (questionId === 'edit-fields') {
+      const fieldId = value;
+      const targetIndex = visibleQuestions.findIndex(q => q.id === fieldId);
+      if (targetIndex !== -1) {
+        dispatch(setCurrentQuestion(targetIndex));
+        setIsAwaitingConfirmation(false);
+      }
       return;
     }
 
