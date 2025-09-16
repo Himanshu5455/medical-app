@@ -932,3 +932,4 @@ case "date":
 };
 
 export default ChatInput;
+

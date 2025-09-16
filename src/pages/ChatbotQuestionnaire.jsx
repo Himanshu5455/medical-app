@@ -53,6 +53,8 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
   
   // Track streaming state to disable input during streaming
   const [isStreamingActive, setIsStreamingActive] = useState(false);
+  // When true, hide input while waiting for user confirmation after summary
+  const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(false);
 
   // Handler for when streaming completes
   const handleStreamingComplete = () => {
@@ -70,6 +72,7 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
     dispatch(resetQuestionnaire());
     localStorage.removeItem('questionnaire');
     initializedRef.current = false;
+    setIsAwaitingConfirmation(false);
     
     // Send welcome message and first question again
     setTimeout(() => {
@@ -272,16 +275,81 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
       dispatch(removeToChatHistory(`thinking-${thinkingMessageId}`));
 
       setIsStreamingActive(true);
-      dispatch(addToChatHistory({
-        type: 'bot',
-        message: "Thank you for completing the questionnaire! 🎉 We have all the information we need.",
-        timestamp: new Date().toISOString(),
-        questionId: 'completion',
-        shouldStream: true
-      }));
-    }, 1500);
+      
+      // If the last answered question was file upload, add a summary message from localStorage
+      if (question.id === 'files') {
+        let savedName = answers?.name || '';
+        let savedEmail = answers?.email || '';
+        let savedPhone = answers?.phone || '';
+        let savedDob = answers?.dob || '';
+        let savedReferral = answers?.refer_physician_name || answers?.physician || '';
+        let savedReasonValue = answers?.referral_reason || '';
+        try {
+          const savedDataRaw = localStorage.getItem('questionnaire');
+          if (savedDataRaw) {
+            const savedData = JSON.parse(savedDataRaw);
+            const a = savedData?.answers || {};
+            savedName = a.name || savedName;
+            savedEmail = a.email || savedEmail;
+            savedPhone = a.phone || savedPhone;
+            savedDob = a.dob || savedDob;
+            savedReferral = a.refer_physician_name || a.physician || savedReferral;
+            savedReasonValue = a.referral_reason || savedReasonValue;
+          }
+        } catch (e) {
+          // ignore parse errors and fall back to redux state
+        }
 
-    dispatch(completeQuestionnaire());
+        // Map reason value to label
+        let savedReasonLabel = savedReasonValue;
+        try {
+          const reasonQ = QUESTIONS.find(q => q.id === 'referral_reason');
+          if (reasonQ && Array.isArray(reasonQ.options)) {
+            const opt = reasonQ.options.find(o => o.value === savedReasonValue);
+            if (opt) savedReasonLabel = opt.label;
+          }
+        } catch {}
+
+        const summaryLines = [
+          `Great! I have received your information.`,
+          `Full name: ${savedName || 'N/A'}`,
+          `Email: ${savedEmail || 'N/A'}`,
+          `Phone: ${savedPhone || 'N/A'}`,
+          `DOB: ${savedDob || 'N/A'}`,
+          `Referral: ${savedReferral || 'N/A'}`,
+          `Reason: ${savedReasonLabel || 'N/A'}`,
+          ``,
+          `Is that correct?`
+        ];
+        const summaryText = summaryLines.join('\n');
+        dispatch(addToChatHistory({
+          type: 'bot',
+          message: summaryText,
+          timestamp: new Date().toISOString(),
+          questionId: 'summary-info',
+          shouldStream: true,
+          options: [
+            { value: 'confirm_summary', label: 'Yes, everything is correct' }
+          ]
+        }));
+        // Hide the input while awaiting user confirmation
+        setIsAwaitingConfirmation(true);
+        // Defer completion until user confirms
+      } else {
+        // default completion message
+        dispatch(addToChatHistory({
+          type: 'bot',
+          message: "Thank you for completing the questionnaire! 🎉 We have all the information we need.",
+          timestamp: new Date().toISOString(),
+          questionId: 'completion',
+          shouldStream: true
+        }));
+
+        // Immediately mark as complete for non-file final step
+        dispatch(completeQuestionnaire());
+      }
+    }, 1500);
+    // Note: completion is dispatched above depending on the path
   }
 };
 
@@ -290,6 +358,48 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
 
 
   const handleOptionClick = (value, label, questionId) => {
+    // Handle special confirmation from summary message
+    if (questionId === 'summary-info' && value === 'confirm_summary') {
+      const thinkingMessageId = Date.now();
+      dispatch(addToChatHistory({
+        type: 'bot',
+        message: '',
+        isTyping: true,
+        timestamp: new Date().toISOString(),
+        questionId: `thinking-${thinkingMessageId}`
+      }));
+
+      setTimeout(() => {
+        dispatch(removeToChatHistory(`thinking-${thinkingMessageId}`));
+        setIsStreamingActive(true);
+
+        // First completion message
+        dispatch(addToChatHistory({
+          type: 'bot',
+          message: "Thank you for completing the questionnaire! 🎉 We have all the information we need.",
+          timestamp: new Date().toISOString(),
+          questionId: 'completion',
+          shouldStream: true
+        }));
+
+        // Follow-up message
+        setTimeout(() => {
+          // dispatch(addToChatHistory({
+          //   type: 'bot',
+           
+          //   timestamp: new Date().toISOString(),
+          //   questionId: 'completion-followup',
+          //   shouldStream: true
+          // }));
+
+          // Mark as completed and show footer summary area
+          dispatch(completeQuestionnaire());
+          setIsAwaitingConfirmation(false);
+        }, 1200);
+      }, 800);
+      return;
+    }
+
     // Only process clicks from the current active question
     if (currentQuestion && questionId === currentQuestion.id) {
       handleAnswer(value);
@@ -515,8 +625,8 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
           ))}
         </Box>
 
-        {/* Input Area - Always visible when not completed */}
-        {!isCompleted && currentQuestion && (
+        {/* Input Area - hidden while awaiting confirmation */}
+        {!isCompleted && currentQuestion && !isAwaitingConfirmation && (
           <Box
             sx={{
               bgcolor: 'white',
@@ -571,3 +681,4 @@ const currentQuestion = visibleQuestions[currentQuestionIndex];
 };
 
 export default ChatbotQuestionnaire;
+
