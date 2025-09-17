@@ -3,7 +3,7 @@ import { Typography } from '@mui/material';
 
 const StreamingText = ({ 
   text = '', 
-  speed = 30, // milliseconds between characters
+  speed = 10, // milliseconds between characters
   onComplete = null,
   sx = {},
   variant = "body2" 

@@ -14,7 +14,8 @@ import {
   Toolbar,
   Button,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  TextField
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -303,10 +304,11 @@ const ChatbotQuestionnaire = () => {
     }
 
     // ✅ Recalculate visible questions AFTER saving answer
-    const updatedVisibleQuestions = getVisibleQuestions({
+    const effectiveAnswers = {
       ...answers,
       [question.id]: normalizedValue
-    });
+    };
+    const updatedVisibleQuestions = getVisibleQuestions(effectiveAnswers);
 
     const nextIndex = currentQuestionIndex + 1;
     const nextQ = updatedVisibleQuestions[nextIndex];
@@ -481,6 +483,62 @@ const ChatbotQuestionnaire = () => {
         
           setIsAwaitingConfirmation(true);
           // Defer completion until user confirms
+        } else if (effectiveAnswers?.files_permission === false) {
+          // User opted not to upload files → still show summary and proceed to submission
+          let savedName = effectiveAnswers?.name || '';
+          let savedEmail = effectiveAnswers?.email || '';
+          let savedPhone = effectiveAnswers?.phone || '';
+          let savedDob = effectiveAnswers?.dob || '';
+          let savedReferral = effectiveAnswers?.refer_physician_name || effectiveAnswers?.physician || '';
+          let savedReasonValue = effectiveAnswers?.referral_reason || '';
+          try {
+            const savedDataRaw = localStorage.getItem('questionnaire');
+            if (savedDataRaw) {
+              const savedData = JSON.parse(savedDataRaw);
+              const a = savedData?.answers || {};
+              savedName = a.name || savedName;
+              savedEmail = a.email || savedEmail;
+              savedPhone = a.phone || savedPhone;
+              savedDob = a.dob || savedDob;
+              savedReferral = a.refer_physician_name || a.physician || savedReferral;
+              savedReasonValue = a.referral_reason || savedReasonValue;
+            }
+          } catch (e) { }
+
+          let savedReasonLabel = savedReasonValue;
+          try {
+            const reasonQ = QUESTIONS.find(q => q.id === 'referral_reason');
+            if (reasonQ && Array.isArray(reasonQ.options)) {
+              const opt = reasonQ.options.find(o => o.value === savedReasonValue);
+              if (opt) savedReasonLabel = opt.label;
+            }
+          } catch { }
+
+          const summaryLines = [
+            `Great! I have received your information.`,
+            `Full name: ${savedName || 'N/A'}`,
+            `Email: ${savedEmail || 'N/A'}`,
+            `Phone: ${savedPhone || 'N/A'}`,
+            `DOB: ${savedDob || 'N/A'}`,
+            `Referral: ${savedReferral || 'N/A'}`,
+            `Reason: ${savedReasonLabel || 'N/A'}`,
+            ``,
+            `Is that correct?`
+          ];
+          const summaryText = summaryLines.join('\n');
+          dispatch(addToChatHistory({
+            type: 'bot',
+            message: summaryText,
+            timestamp: new Date().toISOString(),
+            questionId: 'summary-info',
+            shouldStream: true,
+            options: [
+              { value: 'confirm_summary', label: 'Yes, everything is correct' },
+              { value: 'edit_summary', label: 'No, edit my info' }
+            ]
+          }));
+          setIsAwaitingConfirmation(true);
+          // Defer completion until user confirms
         } else {
           // default completion message
           dispatch(addToChatHistory({
@@ -614,12 +672,16 @@ const ChatbotQuestionnaire = () => {
         const clamped = Number.isNaN(num) ? value : Math.max(1, Math.min(5, num));
         return `${clamped}/5`;
       }
+
+
+      
       case 'file':
         if (Array.isArray(value)) {
           return value.length > 0
             ? `Uploaded ${value.length} file${value.length > 1 ? 's' : ''}: ${value.map(f => f.name).join(', ')}`
             : 'No files uploaded';
         }
+
         return value;
       default:
         return value;
@@ -839,6 +901,7 @@ const ChatbotQuestionnaire = () => {
                 currentAnswer={answers[currentQuestion.id]}
                 onAnswer={handleAnswer}
                 isStreamingActive={isStreamingActive}
+                filesPermission={answers?.files_permission}
               />
             </Box>
           )}
@@ -876,5 +939,3 @@ const ChatbotQuestionnaire = () => {
 };
 
 export default ChatbotQuestionnaire;
-
-

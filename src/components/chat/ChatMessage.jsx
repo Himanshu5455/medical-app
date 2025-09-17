@@ -64,7 +64,7 @@ const ChatMessage = ({ message, onOptionClick, onStreamingComplete }) => {
                 <StreamingText 
                   text={message.message}
                   onComplete={handleStreamComplete}
-                  speed={30}
+                  speed={10}
                   sx={{ 
                     lineHeight: 1.5,
                     fontSize: { xs: '0.875rem', sm: '1rem' },

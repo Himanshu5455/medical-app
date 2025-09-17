@@ -62,9 +62,15 @@ export function serializeCustomerPayload(answers) {
   }
 
   // Remove files metadata unless backend expects it
-  if (Array.isArray(payload.files)) {
-    delete payload.files;
-  }
+  // if (Array.isArray(payload.files)) {
+  //   delete payload.files;
+  // }
+
+  // Remove files metadata unless backend expects it
+if (Array.isArray(payload.files) && payload.files.length === 0) {
+  delete payload.files; // keep only when empty
+}
+
 
   // Remove empty optional strings to satisfy strict validators
   Object.keys(payload).forEach((key) => {
@@ -75,3 +81,4 @@ export function serializeCustomerPayload(answers) {
 }
 
 
+  

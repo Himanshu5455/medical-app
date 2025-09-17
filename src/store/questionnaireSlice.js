@@ -27,6 +27,7 @@ const initialState = {
     positive_experience: null,
     rate_experience: 0,
     comment: '',
+    files_permission: null,
     files: []
   },
   chatHistory: [],
