@@ -184,7 +184,7 @@ const renderInput = () => {
             px: { xs: 1, sm: 2 },
           }}
         >
-          <IconButton
+          {/* <IconButton
             sx={{
               color: "#125A67",
               width: 40,
@@ -197,7 +197,7 @@ const renderInput = () => {
             }}
           >
             <AddIcon fontSize="medium" />
-          </IconButton>
+          </IconButton> */}
           <TextField
             fullWidth
             variant="outlined"
@@ -614,4 +614,3 @@ case "date":
 };
 
 export default ChatInput;
-

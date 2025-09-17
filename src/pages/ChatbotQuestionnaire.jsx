@@ -211,10 +211,20 @@ const ChatbotQuestionnaire = () => {
       questionId: question.id
     }));
 
+    // Normalize specific types before saving
+    let normalizedValue = value;
+    if (question.type === 'scale') {
+      const num = Number(value);
+      if (!Number.isNaN(num)) {
+        const clamped = Math.max(1, Math.min(5, num));
+        normalizedValue = clamped;
+      }
+    }
+
     // Save answer
     dispatch(setAnswer({
       field: question.id,
-      value: value
+      value: normalizedValue
     }));
 
     // If we are editing from summary, regenerate summary immediately and skip normal progression
@@ -295,7 +305,7 @@ const ChatbotQuestionnaire = () => {
     // ✅ Recalculate visible questions AFTER saving answer
     const updatedVisibleQuestions = getVisibleQuestions({
       ...answers,
-      [question.id]: value
+      [question.id]: normalizedValue
     });
 
     const nextIndex = currentQuestionIndex + 1;
@@ -468,7 +478,7 @@ const ChatbotQuestionnaire = () => {
               { value: 'edit_summary', label: 'No, edit my info' }
             ]
           }));
-          // Hide the input while awaiting user confirmation
+        
           setIsAwaitingConfirmation(true);
           // Defer completion until user confirms
         } else {
@@ -599,8 +609,11 @@ const ChatbotQuestionnaire = () => {
         return option ? option.label : value;
       case 'rating':
         return `${value} star${value !== 1 ? 's' : ''}`;
-      case 'scale':
-        return `${value}/10`;
+      case 'scale': {
+        const num = Number(value);
+        const clamped = Number.isNaN(num) ? value : Math.max(1, Math.min(5, num));
+        return `${clamped}/5`;
+      }
       case 'file':
         if (Array.isArray(value)) {
           return value.length > 0
@@ -617,24 +630,24 @@ const ChatbotQuestionnaire = () => {
     <Box sx={{
       display: 'flex',
       flexDirection: 'column',
-      height: '100vh', // Full viewport height
+      height: '100vh', 
       bgcolor: '#f8f9fa'
     }}>
       {/* Desktop Navbar - always visible on desktop */}
       {!isMobile && <Navbar />}
 
-      {/* Chat Container with proper spacing on both sides */}
+      
       <Box sx={{
-        flex: 1, // Take all remaining space
+        flex: 1, 
         display: 'flex',
         justifyContent: 'center',
-        pt: isMobile ? 0 : 1, // Small top padding to avoid navbar overlap
-        pb: isMobile ? 0 : 1, // Same bottom padding for symmetry
-        overflow: 'hidden' // Prevent any overflow
+        pt: isMobile ? 0 : 1, 
+        pb: isMobile ? 0 : 1, 
+        overflow: 'hidden' 
       }}>
         <Box
           sx={{
-            height: '100%', // Full height of parent
+            height: '100%', 
             width: '100%',
             maxWidth: isMobile ? '100%' : '800px',
             display: 'flex',

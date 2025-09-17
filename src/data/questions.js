@@ -60,7 +60,7 @@ export const QUESTIONS = [
   {
     id: 'alternative_no',
     type: 'tel',
-    question: "Is there an alternative phone number we can reach you at?",
+    question: "Alternative phone number we can reach you at?",
     placeholder: "Enter alternative phone number (optional)",
     required: false
   },
@@ -191,10 +191,16 @@ export const QUESTIONS = [
   {
     id: 'pain_scale',
     type: 'scale',
-    question: "On a scale of 1-10, how would you rate your current pain level?",
+    question: "On a scale of 1-5, how would you rate your current pain level?",
     min: 1,
-    max: 10,
-    required: false
+    max: 5,
+    required: false,
+      validation: (value) => {
+    const num = Number(value);
+    if (isNaN(num)) return "Please enter a number";
+    if (num < 1 || num > 5) return "Value must be between 1 and 5";
+    return null;
+  }
   },
   {
     id: 'positive_experience',
@@ -220,14 +226,35 @@ export const QUESTIONS = [
     placeholder: "Share any additional information or concerns...",
     required: false
   },
+
   {
-    id: 'files',
-    type: 'file',
-    question: "Would you like to upload any medical documents or files?",
-    accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png",
-    multiple: true,
-    required: false
-  }
+  id: 'files_permission',
+  type: 'boolean',
+  question: "Would you like to upload any medical documents or files?",
+  options: [
+    { value: true, label: 'Yes' },
+    { value: false, label: 'No' }
+  ],
+  required: false
+},
+{
+  id: 'files',
+  type: 'file',
+  question: "Please attach your medical documents or images",
+  accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png",
+  multiple: true,
+  required: false,
+  showIf: (answers) => answers.files_permission === true  
+}
+
+  // {
+  //   id: 'files',
+  //   type: 'file',
+  //   question: "Would you like to upload any medical documents or files?",
+  //   accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png",
+  //   multiple: true,
+  //   required: false
+  // }
 ];
 
 
@@ -240,4 +267,5 @@ export const getVisibleQuestions = (answers) => {
     return question.showIf(answers);
   });
 };
+
 
