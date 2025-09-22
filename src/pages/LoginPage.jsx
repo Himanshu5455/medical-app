@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from '../services/api'; // ✅ Import the helper
+import { loginUser } from '../services/api'; 
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ username: "", password: "" });
@@ -91,7 +91,3 @@ const LoginPage = () => {
 
 export default LoginPage;
 
-/*
-
-
-*/

@@ -22,132 +22,43 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import AddIcon from '@mui/icons-material/Add';
 
-const ChatInput = ({ question, currentAnswer, onAnswer, disabled, isStreamingActive, filesPermission }) => {
+const ChatInput = ({ question, currentAnswer, onAnswer, disabled, isStreamingActive, filesPermission, isEditing }) => {
   const [inputValue, setInputValue] = useState(currentAnswer || '');
   const [files, setFiles] = useState(currentAnswer && Array.isArray(currentAnswer) ? currentAnswer : []);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
-  // Update input values when question or currentAnswer changes
+  // On question change: if editing from summary, prefill with existing answer; otherwise clear
   useEffect(() => {
-    if (question?.type === 'file' && Array.isArray(currentAnswer)) {
-      setFiles(currentAnswer);
-      setInputValue('');
+    if (isEditing) {
+      if (question?.type === 'file' && Array.isArray(currentAnswer)) {
+        setFiles(currentAnswer);
+        setInputValue('');
+      } else if (question?.type === 'date') {
+        // currentAnswer might be in DD/MM/YYYY; convert to Date for picker
+        if (typeof currentAnswer === 'string' && currentAnswer.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+          const [dd, mm, yyyy] = currentAnswer.split('/');
+          const asDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+          setInputValue(asDate);
+        } else {
+          setInputValue(currentAnswer || '');
+        }
+        setFiles([]);
+      } else {
+        setInputValue(currentAnswer || '');
+        setFiles([]);
+      }
     } else {
-      setInputValue(currentAnswer || '');
-      setFiles([]);
+      if (question?.type === 'file' && Array.isArray(currentAnswer)) {
+        setFiles(currentAnswer);
+        setInputValue('');
+      } else {
+        setInputValue('');
+        setFiles([]);
+      }
     }
-    setError(''); // Clear any previous errors
-  }, [question?.id, currentAnswer]); // Only re-run when question ID or answer changes
-
-  // const handleSubmit = (value = inputValue) => {
-  //   // Prevent submission if streaming is active
-  //   if (isStreamingActive) {
-  //     return;
-  //   }
-    
-  //   // For file inputs, use files array instead of inputValue
-  //   const submitValue = question.type === 'file' ? files : value;
-    
-  //   if (question.required && (!submitValue || (Array.isArray(submitValue) && submitValue.length === 0) || submitValue === '')) {
-  //     setError(`${question.question} is required`);
-  //     return;
-  //   }
-
-  //   if (question.validation) {
-  //     const validationError = question.validation(submitValue);
-  //     if (validationError) {
-  //       setError(validationError);
-  //       return;
-  //     }
-  //   }
-
-  //   setError('');
-  //   onAnswer(submitValue);
-    
-  //   // Clear inputs based on type
-  //   if (question.type === 'file') {
-  //     setFiles([]);
-  //   } else {
-  //     setInputValue('');
-  //   }
-  // };
-
-
-// const handleSubmit = (value = inputValue) => {
-//   // Prevent submission if streaming is active
-//   if (isStreamingActive) {
-//     return;
-//   }
-
-//   let submitValue;
-
-//   // ✅ Special handling for files_permission
-//   if (question.id === "files_permission") {
-//     if (value === false) {
-//       // User clicked NO → call API immediately without waiting for files
-//       setError("");
-//       onAnswer(false);
-//       return; // exit early
-//     }
-//   }
-
-//   // Normalize values based on question type
-//   if (question.type === "file") {
-//     submitValue = files;
-//   } else if (question.type === "date") {
-//     // Convert Date -> "DD/MM/YYYY" string to keep Redux state serializable
-//     if (value instanceof Date) {
-//       const d = value;
-//       const day = String(d.getDate()).padStart(2, "0");
-//       const month = String(d.getMonth() + 1).padStart(2, "0");
-//       const year = String(d.getFullYear());
-//       submitValue = `${day}/${month}/${year}`; // e.g. 06/09/2025
-//     } else if (typeof value === "string" && value.includes("-")) {
-//       // If we received an ISO-like string, convert to DD/MM/YYYY
-//       const parts = value.split("-"); // [YYYY, MM, DD]
-//       if (parts.length === 3) {
-//         submitValue = `${parts[2]}/${parts[1]}/${parts[0]}`;
-//       } else {
-//         submitValue = value || "";
-//       }
-//     } else {
-//       submitValue = value || "";
-//     }
-//   } else {
-//     submitValue = value;
-//   }
-
-//   // Handle required validation
-//   if (
-//     question.required &&
-//     (!submitValue ||
-//       (Array.isArray(submitValue) && submitValue.length === 0) ||
-//       submitValue === "")
-//   ) {
-//     setError(`${question.question} is required`);
-//     return;
-//   }
-
-//   // Custom validation if provided
-//   if (question.validation) {
-//     const validationError = question.validation(submitValue);
-//     if (validationError) {
-//       setError(validationError);
-//       return;
-//     }
-//   }
-
-//   setError("");
-//   onAnswer(submitValue);
-
-//   // Clear inputs based on type
-//   if (question.type === "file") {
-//     setFiles([]);
-//   } else {
-//     setInputValue("");
-//   }
-// };
+    setError('');
+  }, [question?.id, isEditing]);
 
 
 const handleSubmit = (value = inputValue) => {
@@ -158,10 +69,10 @@ const handleSubmit = (value = inputValue) => {
 
   let submitValue;
 
-  // ✅ Special handling for files_permission
+
   if (question.id === "files_permission") {
     if (value === false) {
-      // User clicked NO → call API immediately without waiting for files
+      
       setError("");
       onAnswer(false);
       return; // exit early
@@ -173,14 +84,14 @@ const handleSubmit = (value = inputValue) => {
     submitValue = files;
   } else if (question.type === "date") {
     if (value instanceof Date) {
-      // Convert Date -> "DD/MM/YYYY"
+    
       const d = value;
       const day = String(d.getDate()).padStart(2, "0");
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const year = String(d.getFullYear());
       submitValue = `${day}/${month}/${year}`;
     } else if (typeof value === "string" && value.includes("-")) {
-      // Convert "YYYY-MM-DD" to "DD/MM/YYYY"
+      
       const parts = value.split("-");
       if (parts.length === 3) {
         submitValue = `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -194,23 +105,23 @@ const handleSubmit = (value = inputValue) => {
     submitValue = value;
   }
 
-  // ✅ Modified required validation
+  
   if (
     question.required &&
     (!submitValue ||
       (Array.isArray(submitValue) && submitValue.length === 0) ||
       submitValue === "")
   ) {
-    // ✅ Allow skipping file upload if user selected NO
+ 
     if (question.id === "files" && filesPermission === false) {
-      // Skip validation → allow API call
+ 
     } else {
       setError(`${question.question} is required`);
       return;
     }
   }
 
-  // Custom validation if provided
+
   if (question.validation) {
     const validationError = question.validation(submitValue);
     if (validationError) {
@@ -219,7 +130,7 @@ const handleSubmit = (value = inputValue) => {
     }
   }
 
-  // ✅ If everything is fine, call API
+  
   setError("");
   onAnswer(submitValue);
 
@@ -234,9 +145,9 @@ const handleSubmit = (value = inputValue) => {
 
   const handleFileUpload = (event) => {
     const selectedFiles = Array.from(event.target.files || []);
-    // Keep real File objects so we can send them to the backend
+ 
     setFiles(prev => [...prev, ...selectedFiles]);
-    // Clear the input so the same file can be selected again
+   
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -326,38 +237,6 @@ const renderInput = () => {
         </Box>
       );
 
-    // case "boolean":
-  //  case "boolean":
-  // return (
-  //   <Box
-  //     sx={{
-  //       display: "flex",
-  //       gap: 1,
-  //       alignItems: "center",
-  //       width: "100%",
-  //       px: { xs: 1, sm: 2 },
-  //     }}
-  //   >
-  //     <TextField
-  //       fullWidth
-  //       variant="outlined"
-  //       value={inputValue === true ? "Yes" : inputValue === false ? "No" : ""}
-  //       placeholder="Select Yes or No"
-  //       InputProps={{
-  //         readOnly: true, 
-  //       }}
-  //       size="small"
-  //       sx={{
-  //         flex: 1,
-  //         "& .MuiOutlinedInput-root": {
-  //           borderRadius: 20,
-  //           backgroundColor: "white",
-  //         },
-  //       }}
-  //       disabled={disabled}
-  //     />
-  //   </Box>
-  // );
 
 case "boolean":
   return (
@@ -527,29 +406,6 @@ case "date":
         <AddIcon fontSize="medium" />
       </IconButton>
 
-      {/* <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <DatePicker
-          label="Select your date of birth"
-          value={inputValue || null}
-          onChange={(newValue) => setInputValue(newValue)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              fullWidth
-              size="small"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 20,
-                  backgroundColor: "white",
-                },
-              }}
-              disabled={disabled}
-            />
-          )}
-        />
-      </LocalizationProvider> */}
-
-
       <LocalizationProvider dateAdapter={AdapterDateFns}>
   <DatePicker
     label="Select your date of birth"
@@ -591,133 +447,6 @@ case "date":
     </Box>
   );
 
-
-    // case "file":
-    //   return (
-    //     <Box
-    //       sx={{
-    //         display: "flex",
-    //         flexDirection: "column",
-    //         gap: 1,
-    //         width: "100%",
-    //         px: { xs: 1, sm: 2 },
-    //         py: 0.5,
-    //         minHeight: "60px",
-    //         justifyContent: "flex-end",
-    //       }}
-    //     >
-    //       <input
-    //         type="file"
-    //         ref={fileInputRef}
-    //         onChange={handleFileUpload}
-    //         accept={question.accept || "*/*"}
-    //         multiple={question.multiple || false}
-    //         style={{ display: "none" }}
-    //       />
-
-    //       {files.length > 0 && (
-    //         <Paper variant="outlined" sx={{ p: 1, maxHeight: 80, overflow: "auto" }}>
-    //           <Typography
-    //             variant="caption"
-    //             sx={{ mb: 0.5, color: "#374151", display: "block" }}
-    //           >
-    //             Files: {files.length}
-    //           </Typography>
-    //           <List dense sx={{ py: 0 }}>
-    //             {files.map((file, index) => (
-    //               <ListItem key={index} sx={{ px: 0, py: 0.25 }}>
-    //                 <AttachFileIcon
-    //                   sx={{ mr: 0.5, color: "#125A67", fontSize: 14 }}
-    //                 />
-    //                 <ListItemText
-    //                   primary={file.name}
-    //                   secondary={`${(file.size / 1024).toFixed(1)} KB`}
-    //                   sx={{
-    //                     "& .MuiListItemText-primary": { fontSize: "0.75rem" },
-    //                     "& .MuiListItemText-secondary": { fontSize: "0.65rem" },
-    //                   }}
-    //                 />
-    //                 <ListItemSecondaryAction>
-    //                   <IconButton
-    //                     edge="end"
-    //                     size="small"
-    //                     onClick={() => handleRemoveFile(index)}
-    //                     sx={{ color: "#EF4444" }}
-    //                   >
-    //                     <DeleteIcon fontSize="small" />
-    //                   </IconButton>
-    //                 </ListItemSecondaryAction>
-    //               </ListItem>
-    //             ))}
-    //           </List>
-    //         </Paper>
-    //       )}
-
-    //       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-    //         <Button
-    //           variant="outlined"
-    //           startIcon={<CloudUploadIcon />}
-    //           onClick={() => fileInputRef.current?.click()}
-    //           disabled={disabled}
-    //           sx={{
-    //             borderColor: "#125A67",
-    //             color: "#125A67",
-    //             "&:hover": { borderColor: "#0d434c", bgcolor: "#125A67" },
-    //             borderRadius: 20,
-    //             textTransform: "none",
-    //             flex: 1,
-    //           }}
-    //         >
-    //           Send an image
-    //         </Button>
-
-    //         <Button
-    //           variant="outlined"
-    //           startIcon={<AttachFileIcon />}
-    //           onClick={() => fileInputRef.current?.click()}
-    //           disabled={disabled}
-    //           sx={{
-    //             borderColor: "#125A67",
-    //             color: "#125A67",
-    //             "&:hover": { borderColor: "#0d434c", bgcolor: "#125A67" },
-    //             borderRadius: 20,
-    //             textTransform: "none",
-    //             flex: 1,
-    //           }}
-    //         >
-    //           Send a file
-    //         </Button>
-    //       </Box>
-
-    //       {files.length > 0 && (
-    //         <Box sx={{ display: "flex", justifyContent: "center" }}>
-    //           <IconButton
-    //             onClick={() => handleSubmit()}
-    //             disabled={disabled || isStreamingActive}
-    //             sx={{
-    //               bgcolor: "#125A67",
-    //               color: "white !important",
-    //               width: 48,
-    //               height: 48,
-    //               "&:hover": { bgcolor: "#0d434c", color: "white !important" },
-    //             }}
-    //           >
-    //             <SendIcon sx={{ color: "white" }} />
-    //           </IconButton>
-    //         </Box>
-    //       )}
-
-    //       {error && (
-    //         <Typography
-    //           variant="caption"
-    //           color="error"
-    //           sx={{ mt: 1, textAlign: "center" }}
-    //         >
-    //           {error}
-    //         </Typography>
-    //       )}
-    //     </Box>
-    //   );
 
 case "file":
   return (
@@ -906,11 +635,11 @@ case "file":
 
   return (
     <Box sx={{ 
-      minHeight: '60px', // Ensure consistent minimum height
-      minWidth: '100%', // Ensure full width is maintained
+      minHeight: '60px', 
+      minWidth: '100%',
       display: 'flex',
-      alignItems: 'flex-end', // Align content to bottom for consistency
-      width: '100%' // Explicit full width
+      alignItems: 'flex-end', 
+      width: '100%'
     }}>
       {renderInput()}
     </Box>
@@ -918,3 +647,5 @@ case "file":
 };
 
 export default ChatInput;
+
+

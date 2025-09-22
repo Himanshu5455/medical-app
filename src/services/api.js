@@ -1,7 +1,7 @@
 function buildUrl(path) {
   const base = import.meta.env.VITE_API_BASE_URL || '';
   console.log("base", base)
-  if (!base) return path; 
+  if (!base) return path;
   return `${base.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
@@ -35,7 +35,7 @@ export async function registerCustomer(payload) {
     body: form
   });
   let data = null;
-  try { data = await response.json(); } catch (e) {}
+  try { data = await response.json(); } catch (e) { }
 
   if (!response.ok) {
     const detail = data && (data.message || data.error || JSON.stringify(data));
@@ -52,7 +52,7 @@ export async function registerCustomer(payload) {
 export function serializeCustomerPayload(answers) {
   const payload = { ...answers };
 
-  
+
   if (typeof payload.dob === 'string') {
     const m = payload.dob.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (m) {
@@ -61,7 +61,7 @@ export function serializeCustomerPayload(answers) {
     }
   }
 
- 
+
   if (typeof payload.pain_scale === 'string' && payload.pain_scale !== '') {
     const n = Number(payload.pain_scale);
     if (!Number.isNaN(n)) payload.pain_scale = n;
@@ -86,7 +86,7 @@ export function serializeCustomerPayload(answers) {
 
 export async function loginUser(payload) {
 
-  
+
   const response = await fetch(buildUrl("/auth/login"), {
     method: "POST",
     headers: {
@@ -117,5 +117,3 @@ export async function loginUser(payload) {
   return data;
 }
 
-
-  

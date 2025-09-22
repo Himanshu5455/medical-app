@@ -902,6 +902,7 @@ const ChatbotQuestionnaire = () => {
                 onAnswer={handleAnswer}
                 isStreamingActive={isStreamingActive}
                 filesPermission={answers?.files_permission}
+                isEditing={isReturnToSummary}
               />
             </Box>
           )}
