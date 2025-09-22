@@ -7,6 +7,8 @@ import Navbar from './components/layout/Navbar';
 import TriageManagement from './pages/TriageManagement';
 import PatientDetailsPage from './pages/PatientDetailsPage';
 import ChatbotQuestionnaire from './pages/ChatbotQuestionnaire';
+import LoginPage from './pages/LoginPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 const theme = createTheme({
   palette: {
@@ -38,6 +40,9 @@ function App() {
               <Route path="/admin/dashboard" element={<><Navbar /><TriageManagement /></>} />
               <Route path="/admin/patient-detail/:id" element={<><Navbar /><PatientDetailsPage /></>} />
               <Route path="/patient-details/:id" element={<><Navbar /><PatientDetailsPage /></>} />
+              <Route path="/admin/login" element={<><Navbar /><LoginPage /></>} />
+                <Route path="/login/dashboard" element={<><Navbar /><AdminDashboard /></>} />
+
             </Routes>
           </Router>
         </div>

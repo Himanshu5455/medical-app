@@ -9,6 +9,16 @@ export async function registerCustomer(payload) {
   const form = new FormData();
   Object.entries(payload).forEach(([k, v]) => {
     if (v === undefined || v === null) return;
+    // Special handling for file uploads
+    if (k === 'files' && Array.isArray(v)) {
+      v.forEach((item) => {
+        if (item instanceof File || item instanceof Blob) {
+          const fileName = item.name || 'upload.dat';
+          form.append('files', item, fileName);
+        }
+      });
+      return;
+    }
     if (Array.isArray(v)) {
       form.append(k, JSON.stringify(v));
       return;
@@ -61,16 +71,10 @@ export function serializeCustomerPayload(answers) {
     if (!Number.isNaN(n)) payload.rate_experience = n;
   }
 
-  // Remove files metadata unless backend expects it
-  // if (Array.isArray(payload.files)) {
-  //   delete payload.files;
-  // }
-
-  // Remove files metadata unless backend expects it
-if (Array.isArray(payload.files) && payload.files.length === 0) {
-  delete payload.files; // keep only when empty
-}
-
+  // Remove empty files array; keep actual File objects as-is
+  if (Array.isArray(payload.files) && payload.files.length === 0) {
+    delete payload.files;
+  }
 
   // Remove empty optional strings to satisfy strict validators
   Object.keys(payload).forEach((key) => {
@@ -78,6 +82,39 @@ if (Array.isArray(payload.files) && payload.files.length === 0) {
   });
 
   return payload;
+}
+
+export async function loginUser(payload) {
+
+  
+  const response = await fetch(buildUrl("/auth/login"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", // ✅ Sending JSON
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (e) {
+    // Endpoint might not return JSON
+  }
+
+
+  if (!response.ok) {
+    const detail = data && (data.message || data.error || JSON.stringify(data));
+    const message =
+      detail ||
+      `Request failed with status ${response.status} ${response.statusText || ""}`.trim();
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
 }
 
 

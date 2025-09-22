@@ -233,16 +233,9 @@ const handleSubmit = (value = inputValue) => {
 
 
   const handleFileUpload = (event) => {
-    const selectedFiles = Array.from(event.target.files);
-    const fileData = selectedFiles.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      lastModified: file.lastModified
-    }));
-    
-    setFiles(prev => [...prev, ...fileData]);
-    
+    const selectedFiles = Array.from(event.target.files || []);
+    // Keep real File objects so we can send them to the backend
+    setFiles(prev => [...prev, ...selectedFiles]);
     // Clear the input so the same file can be selected again
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
