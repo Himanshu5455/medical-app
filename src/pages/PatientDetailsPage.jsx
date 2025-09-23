@@ -100,6 +100,7 @@ const PatientDetailsPage = () => {
               Patient Information
             </Typography>
           </Box>
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Button
             variant="contained"
             startIcon={<CheckCircleIcon />}
@@ -114,6 +115,11 @@ const PatientDetailsPage = () => {
           >
             Mark as complete
           </Button>
+
+            <IconButton size="small">
+                  <MoreHorizIcon />
+                </IconButton>
+                </Box>
         </Box>
 
         <Grid container spacing={4}>
