@@ -9,6 +9,7 @@ import PatientDetailsPage from './pages/PatientDetailsPage';
 import ChatbotQuestionnaire from './pages/ChatbotQuestionnaire';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
+import SettingsPage from './pages/SettingsPage';
 
 const theme = createTheme({
   palette: {
@@ -42,6 +43,7 @@ function App() {
               <Route path="/patient-details/:id" element={<><Navbar /><PatientDetailsPage /></>} />
               <Route path="/admin/login" element={<><Navbar /><LoginPage /></>} />
                 <Route path="/login/dashboard" element={<><Navbar /><AdminDashboard /></>} />
+                   <Route path="/settings" element={<><Navbar /><SettingsPage /></> } />
 
             </Routes>
           </Router>

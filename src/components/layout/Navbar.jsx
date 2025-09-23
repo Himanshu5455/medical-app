@@ -4,8 +4,14 @@ import Typography from '@mui/material/Typography';
 import Badge from '@mui/material/Badge';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import Avatar from '@mui/material/Avatar';
+import SettingsIcon from "@mui/icons-material/Settings";
+import IconButton from '@mui/material/IconButton';
+import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+    const navigate = useNavigate();
+
   return (
     <AppBar position="static" elevation={1} sx={{ backgroundColor: '#ffffff', color: '#374151' }}>
       <div className="container mx-auto">
@@ -18,9 +24,18 @@ const Navbar = () => {
             </Typography>
           </div>
           <div className="flex items-center gap-4">
-            <Badge badgeContent={99} color="error">
+            {/* <Badge badgeContent={99} color="error" className='bg-[#f3f3f3]'>
               <NotificationsIcon className="text-gray-600" />
-            </Badge>
+            </Badge> */}
+            <div className="relative p-2 rounded-xl bg-gray-200 hover:bg-gray-200">
+              <NotificationsIcon className="text-gray-600 w-10 h-10" />
+              <span className="absolute [top:-4px] [right:-14px] inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+                99
+              </span>
+            </div>
+            <button onClick={() => navigate('/settings')} className="p-2 rounded-xl bg-gray-200 hover:bg-gray-200">
+              <SettingsIcon className="text-gray-600" />
+            </button>
             <Avatar alt="User" className="w-[40px] h-[40px] bg-blue-500">
               U
             </Avatar>
