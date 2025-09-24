@@ -43,7 +43,7 @@ function App() {
               <Route path="/patient-details/:id" element={<><Navbar /><PatientDetailsPage /></>} />
               <Route path="/admin/login" element={<><Navbar /><LoginPage /></>} />
                 <Route path="/login/dashboard" element={<><Navbar /><AdminDashboard /></>} />
-                   <Route path="/settings" element={<><Navbar /><SettingsPage /></> } />
+                 <Route path="/settings" element={<><Navbar /><SettingsPage /></> } />
 
             </Routes>
           </Router>
