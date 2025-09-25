@@ -174,7 +174,7 @@ export async function uploadAvatar(file) {
     throw error;
   }
 
-  return data; 
+  return data;
 }
 
 
@@ -279,4 +279,72 @@ export const getUsers = async () => {
   }
 };
 
+// Add new user
+export const addUser = async (form) => {
+  try {
+    const payload = {
+      username: form.email,        // email goes to username
+      password: form.password,     // make sure you add password field in your form
+      first_name: form.firstName,
+      last_name: form.lastName,
+      role: form.role,
+    };
 
+    const response = await fetch(buildUrl('/auth/create-staff-user'), {
+      method: "POST",
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData?.detail || errData?.message || "Failed to add user");
+    }
+
+    const user = await response.json();
+
+    // Map to frontend format
+    return {
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`,
+      email: user.username,
+      role: user.role,
+      status: "Active",
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+
+// Update user API
+export const updateUser = async (userData) => {
+  const response = await fetch(buildUrl(`/auth/update-staff-user`), {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData?.detail || "Failed to update user");
+  }
+
+  return await response.json();
+};
+
+// Logout 
+export function logout() {
+  try {
+    localStorage.removeItem('token');
+  } catch (e) {
+    // ignore storage errors
+  }
+}

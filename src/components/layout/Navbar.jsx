@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
@@ -10,7 +11,18 @@ import { Navigate } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  useEffect(() => {
+    const onStorage = () => setIsAuthenticated(!!localStorage.getItem('token'));
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  const handleLogin = () => {
+    navigate('/admin/login');
+  };
 
   return (
     <AppBar position="static" elevation={1} sx={{ backgroundColor: '#ffffff', color: '#374151' }}>
@@ -39,6 +51,11 @@ const Navbar = () => {
             <Avatar alt="User" className="w-[40px] h-[40px] bg-blue-500">
               U
             </Avatar>
+            {!isAuthenticated && (
+              <button onClick={handleLogin} className="px-3 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-sm font-medium">
+                LogIn
+              </button>
+            )}
           </div>
         </Toolbar>
       </div>

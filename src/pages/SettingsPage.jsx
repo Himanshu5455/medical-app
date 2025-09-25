@@ -6,8 +6,11 @@ import PersonalInfoCard from "./PersonalInfoCard";
 import { getMe, updateName } from "../services/api";
 import { uploadAvatar } from "../services/api";
 import { Camera } from "lucide-react";
+import { logout } from "../services/api";
+import { useNavigate } from 'react-router-dom';
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("account");
   const [user, setUser] = useState({
     avatar: "",
@@ -68,6 +71,10 @@ const SettingsPage = () => {
   const handleCancel = () => {
     setForm({ firstName: user.firstName, lastName: user.lastName });
   };
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/login', { replace: true });
+  };
 
 
 const handleImageUpload = async (e) => {
@@ -94,7 +101,7 @@ const handleImageUpload = async (e) => {
 };
 
   return (
-    <div className="p-8 min-h-screen max-w-[1140px] mx-auto">
+    <div className="p-4 md:p-8 min-h-screen max-w-[1140px] mx-auto">
       <h2 className="text-2xl font-semibold mb-6">Settings</h2>
       <div className="flex flex-col md:flex-row gap-4">
         {/* Sidebar */}
@@ -115,9 +122,6 @@ const handleImageUpload = async (e) => {
               <div className="font-semibold">{user.firstName + " " + user.lastName}</div>
               <div className="text-sm text-gray-500 mt-1">{user.role}</div>
             </div> */}
-
-
-
             <div className="relative flex flex-col items-center mb-6">
   <span className="absolute right-0 -top-[6px] bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded">
     {user.role}
@@ -180,7 +184,10 @@ const handleImageUpload = async (e) => {
               >
                 <Users size={18} /> <span>User management</span>
               </li>
-              <li className="flex items-center gap-3 px-3 py-2 rounded cursor-pointer text-red-600 hover:bg-red-50">
+              <li
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2 rounded cursor-pointer text-red-600 hover:bg-red-50"
+              >
                 <LogOut size={18} /> <span>Log out</span>
               </li>
             </ul>
