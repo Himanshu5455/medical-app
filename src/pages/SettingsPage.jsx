@@ -4,6 +4,8 @@ import ChangePassword from "./ChangePassword";
 import UserManagement from "./UserManagement";
 import PersonalInfoCard from "./PersonalInfoCard";
 import { getMe, updateName } from "../services/api";
+import { uploadAvatar } from "../services/api";
+import { Camera } from "lucide-react";
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("account");
@@ -18,6 +20,7 @@ const SettingsPage = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -66,6 +69,30 @@ const SettingsPage = () => {
     setForm({ firstName: user.firstName, lastName: user.lastName });
   };
 
+
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Preview immediately
+  const previewUrl = URL.createObjectURL(file);
+  setUser((prev) => ({ ...prev, avatar: previewUrl }));
+
+  try {
+    setUploading(true);
+    const result = await uploadAvatar(file);
+
+    // Assuming backend returns { image: "https://..." }
+    if (result?.image) {
+      setUser((prev) => ({ ...prev, avatar: result.image }));
+    }
+  } catch (err) {
+    console.error("Upload failed", err);
+  } finally {
+    setUploading(false);
+  }
+};
+
   return (
     <div className="p-8 min-h-screen max-w-[1140px] mx-auto">
       <h2 className="text-2xl font-semibold mb-6">Settings</h2>
@@ -74,7 +101,7 @@ const SettingsPage = () => {
         <div className="w-full md:w-1/4 border border-gray-300 rounded-xl">
           <div className="bg-white rounded-xl shadow p-6">
             {/* Avatar */}
-            <div className="relative flex flex-col items-center mb-6">
+            {/* <div className="relative flex flex-col items-center mb-6">
               <span className="absolute right-0 -top-[6px] bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded">
                 {user.role}
               </span>
@@ -87,7 +114,42 @@ const SettingsPage = () => {
               </div>
               <div className="font-semibold">{user.firstName + " " + user.lastName}</div>
               <div className="text-sm text-gray-500 mt-1">{user.role}</div>
-            </div>
+            </div> */}
+
+
+
+            <div className="relative flex flex-col items-center mb-6">
+  <span className="absolute right-0 -top-[6px] bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded">
+    {user.role}
+  </span>
+
+  <div className="relative w-24 h-24 mb-3">
+    <img
+      src={user.avatar || "https://placehold.co/96x96?text=User"}
+      alt="avatar"
+      className="w-24 h-24 rounded-full object-cover"
+    />
+
+    {/* Camera icon overlay */}
+    <label
+      htmlFor="avatarUpload"
+      className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow cursor-pointer hover:bg-gray-100"
+    >
+      <Camera size={16} className="text-gray-600" />
+    </label>
+    <input
+      id="avatarUpload"
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={handleImageUpload}
+    />
+  </div>
+
+  <div className="font-semibold">{user.firstName + " " + user.lastName}</div>
+  <div className="text-sm text-gray-500 mt-1">{user.role}</div>
+  {uploading && <div className="text-xs text-gray-400 mt-1">Uploading...</div>}
+</div>
 
             {/* Menu */}
             <ul className="mt-2 space-y-1">

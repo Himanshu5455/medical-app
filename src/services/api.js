@@ -8,7 +8,7 @@ export async function registerCustomer(payload) {
   const form = new FormData();
   Object.entries(payload).forEach(([k, v]) => {
     if (v === undefined || v === null) return;
-    // Special handling for file uploads
+
     if (k === 'files' && Array.isArray(v)) {
       v.forEach((item) => {
         if (item instanceof File || item instanceof Blob) {
@@ -65,12 +65,12 @@ export function serializeCustomerPayload(answers) {
     if (!Number.isNaN(n)) payload.rate_experience = n;
   }
 
-  // Remove empty files array; keep actual File objects as-is
+
   if (Array.isArray(payload.files) && payload.files.length === 0) {
     delete payload.files;
   }
 
-  // Remove empty optional strings to satisfy strict validators
+
   Object.keys(payload).forEach((key) => {
     if (payload[key] === '') delete payload[key];
   });
@@ -86,7 +86,7 @@ export async function loginUser(payload, useForm = true) {
     body: null,
   };
   if (useForm) {
-    // Backend expects form-data style (FastAPI / OAuth2PasswordRequestForm)
+
     const formBody = new URLSearchParams();
     formBody.append("username", payload.username);
     formBody.append("password", payload.password);
@@ -94,7 +94,7 @@ export async function loginUser(payload, useForm = true) {
     options.headers["Content-Type"] = "application/x-www-form-urlencoded";
     options.body = formBody.toString();
   } else {
-    // Backend expects JSON body
+
     options.headers["Content-Type"] = "application/json";
     options.body = JSON.stringify(payload);
   }
@@ -102,7 +102,7 @@ export async function loginUser(payload, useForm = true) {
   let data = null;
   try {
     data = await response.json();
-  } catch (e) {}
+  } catch (e) { }
 
   if (!response.ok) {
     const detail = data && (data.message || data.error || JSON.stringify(data));
@@ -121,12 +121,12 @@ export async function loginUser(payload, useForm = true) {
 // Get current authenticated user
 export async function getMe() {
   const token = localStorage.getItem('token');
-  const headers = {"ngrok-skip-browser-warning": "true",};
+  const headers = { "ngrok-skip-browser-warning": "true", };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const response = await fetch(buildUrl('/auth/me'), { headers });
   let data = null;
-  try { data = await response.json(); } catch (e) {}
+  try { data = await response.json(); } catch (e) { }
 
   if (!response.ok) {
     const detail = data && (data.message || data.error || JSON.stringify(data));
@@ -139,6 +139,46 @@ export async function getMe() {
 
   return data;
 }
+
+
+// Upload avatar (profile picture)
+export async function uploadAvatar(file) {
+  const token = localStorage.getItem("token");
+  const headers = { "ngrok-skip-browser-warning": "true" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const formData = new FormData();
+  formData.append("file", file); // <-- backend expects "file"
+
+  const response = await fetch(buildUrl("/auth/update-image"), {
+    method: "PATCH",
+    headers,
+    body: formData,
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (e) { }
+
+  if (!response.ok) {
+    const detail =
+      data && (data.message || data.error || JSON.stringify(data));
+    const message =
+      (detail && String(detail)) ||
+      `Request failed with status ${response.status} ${response.statusText || ""
+        }`.trim();
+    const error = new Error(message);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data; 
+}
+
+
+
 
 // Update first and last name for the current user
 export async function updateName({ firstName, lastName }) {
@@ -162,7 +202,7 @@ export async function updateName({ firstName, lastName }) {
     if (ct.includes('application/json')) {
       data = await response.json();
     }
-  } catch (e) {}
+  } catch (e) { }
 
   if (!response.ok) {
     const detail = data && (data.message || data.error || JSON.stringify(data));
@@ -181,14 +221,14 @@ export async function updateName({ firstName, lastName }) {
 export const changePassword = async (newPassword) => {
   try {
     const response = await fetch(buildUrl('/auth/change-password'), {
-      method: "PATCH", // or PUT if backend expects that
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
-    
+
       },
       body: JSON.stringify({
-        new_password: newPassword, // backend expects exactly this
+        new_password: newPassword,
       }),
     });
 
@@ -206,13 +246,14 @@ export const changePassword = async (newPassword) => {
   }
 };
 
-// /auth/my-created-users
+
 // Get AllUsers data
 export const getUsers = async () => {
   try {
-    const response = await fetch(buildUrl('/auth/my-created-users'), { // update backend URL
+    const response = await fetch(buildUrl('/auth/my-created-users'), {
       method: "GET",
       headers: {
+        "ngrok-skip-browser-warning": "true",
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -225,13 +266,13 @@ export const getUsers = async () => {
 
     const data = await response.json();
 
-    // map backend user fields to frontend model
+
     return data.map(user => ({
       id: user.id,
       name: `${user.first_name} ${user.last_name}`,
-      email: user.username, // using username as placeholder
+      email: user.username,
       role: user.role,
-      status: "Active",      // default value for now
+      status: "Active",
     }));
   } catch (error) {
     throw error;
