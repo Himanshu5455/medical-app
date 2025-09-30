@@ -127,20 +127,20 @@ const PatientDetailsModal = ({ open, onClose, patient, position, anchorPosition 
     { label: 'Triage complete', date: '08/22/2025 10:59 AM', completed: false }
   ];
 
-  const notes = [
-    {
-      id: 1,
-      title: 'Initial Assessment',
-      content: 'Lorem ipsum dolor sit amet consectetur. Sit lorem accumsan ultricies. Sed enius mauris dolor nunc tempor sem mauris sagittis et. Ornare ligula dui ut euismod vehicula mauris ipsum mauris',
-      date: '08/22/2025 10:30 AM'
-    },
-    {
-      id: 2,
-      title: 'Follow-up Notes',
-      content: 'Lorem ipsum dolor sit amet consectetur. Sit lorem accumsan ultricies. Sed enius mauris dolor nunc tempor sem mauris sagittis et. Ornare ligula dui ut euismod vehicula mauris ipsum mauris',
-      date: '08/22/2025 11:15 AM'
-    }
-  ];
+  // const notes = [
+  //   {
+  //     id: 1,
+  //     title: 'Initial Assessment',
+  //     content: 'Lorem ipsum dolor sit amet consectetur. Sit lorem accumsan ultricies. Sed enius mauris dolor nunc tempor sem mauris sagittis et. Ornare ligula dui ut euismod vehicula mauris ipsum mauris',
+  //     date: '08/22/2025 10:30 AM'
+  //   },
+  //   {
+  //     id: 2,
+  //     title: 'Follow-up Notes',
+  //     content: 'Lorem ipsum dolor sit amet consectetur. Sit lorem accumsan ultricies. Sed enius mauris dolor nunc tempor sem mauris sagittis et. Ornare ligula dui ut euismod vehicula mauris ipsum mauris',
+  //     date: '08/22/2025 11:15 AM'
+  //   }
+  // ];
 
   return (
     <Dialog
@@ -158,22 +158,26 @@ const PatientDetailsModal = ({ open, onClose, patient, position, anchorPosition 
         sx: { backgroundColor: 'rgba(0, 0, 0, 0.3)' }
       }}
     >
-      <DialogContent sx={{ 
-        p: 0, 
-        height: '700px',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+      <DialogContent
+        sx={{
+          p: 0,
+          height: '700px',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
         {/* Fixed Header */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          p: 3, 
-          borderBottom: '1px solid #E5E7EB',
-          flexShrink: 0
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 3,
+            borderBottom: '1px solid #E5E7EB',
+            flexShrink: 0
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <IconButton onClick={onClose} size="small">
               <ArrowBackIcon />
@@ -187,25 +191,17 @@ const PatientDetailsModal = ({ open, onClose, patient, position, anchorPosition 
           </IconButton>
         </Box>
 
-        {/* Scrollable Content - Single Scrollbar for Entire Modal */}
-        <Box sx={{ 
-          flex: 1, 
-          overflowY: 'auto',
-          '&::-webkit-scrollbar': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
-            borderRadius: '10px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: '#c1c1c1',
-            borderRadius: '10px',
-          },
-          '&::-webkit-scrollbar-thumb:hover': {
-            background: '#a8a8a8',
-          }
-        }}>
+        {/* Scrollable Content */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            '&::-webkit-scrollbar': { width: '6px' },
+            '&::-webkit-scrollbar-track': { background: '#f1f1f1', borderRadius: '10px' },
+            '&::-webkit-scrollbar-thumb': { background: '#c1c1c1', borderRadius: '10px' },
+            '&::-webkit-scrollbar-thumb:hover': { background: '#a8a8a8' }
+          }}
+        >
           <Box sx={{ p: 3 }}>
             {/* Action Button */}
             <Box sx={{ mb: 3 }}>
@@ -235,136 +231,104 @@ const PatientDetailsModal = ({ open, onClose, patient, position, anchorPosition 
                   #{patient.id}
                 </Typography>
                 <Chip
-                  label={patient.status}
+                  label={Array.isArray(patient.status) ? patient.status.join(', ') : patient.status}
                   size="small"
                   sx={{
-                    backgroundColor: (statusColors[patient.status] || '#9CA3AF') + '20',
-                    color: statusColors[patient.status] || '#9CA3AF',
+                    backgroundColor:
+                      (statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF') +
+                      '20',
+                    color: statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF',
                     fontWeight: 500,
                     fontSize: '0.75rem'
                   }}
                 />
               </Box>
 
-              {/* Patient Details Grid - Clean table-like structure */}
-              <Box sx={{ 
-                border: '1px solid #E5E7EB', 
-                borderRadius: 2,
-                overflow: 'hidden',
-                backgroundColor: '#FAFAFA'
-              }}>
+              {/* Patient Details */}
+              <Box
+                sx={{
+                  border: '1px solid #E5E7EB',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  backgroundColor: '#FAFAFA'
+                }}
+              >
                 {/* Row 1 */}
                 <Box sx={{ display: 'flex', borderBottom: '1px solid #E5E7EB' }}>
-                  <Box sx={{ 
-                    width: '50%', 
-                    p: 2, 
-                    borderRight: '1px solid #E5E7EB',
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '50%', p: 2, borderRight: '1px solid #E5E7EB', backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Age
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      {patient.age}
+                      {patient.answers?.age || 'N/A'}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    width: '50%', 
-                    p: 2,
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '50%', p: 2, backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Contact
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      +000 000 0000
+                      {patient.contact_info?.phone || 'N/A'}
                     </Typography>
                   </Box>
                 </Box>
 
                 {/* Row 2 */}
                 <Box sx={{ display: 'flex', borderBottom: '1px solid #E5E7EB' }}>
-                  <Box sx={{ 
-                    width: '50%', 
-                    p: 2, 
-                    borderRight: '1px solid #E5E7EB',
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '50%', p: 2, borderRight: '1px solid #E5E7EB', backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Email
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      soph.cl@email.com
+                      {patient.contact_info?.email || 'N/A'}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    width: '50%', 
-                    p: 2,
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '50%', p: 2, backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Referrer
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      Dr. Emily Carter
+                      {patient.answers?.referring || 'N/A'}
                     </Typography>
                   </Box>
                 </Box>
 
                 {/* Row 3 */}
                 <Box sx={{ display: 'flex', borderBottom: '1px solid #E5E7EB' }}>
-                  <Box sx={{ 
-                    width: '33.33%', 
-                    p: 2, 
-                    borderRight: '1px solid #E5E7EB',
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '33.33%', p: 2, borderRight: '1px solid #E5E7EB', backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Referral reason
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      Fertility
+                      {patient.answers?.referral_reason || 'N/A'}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    width: '33.33%', 
-                    p: 2, 
-                    borderRight: '1px solid #E5E7EB',
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '33.33%', p: 2, borderRight: '1px solid #E5E7EB', backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Partner
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      Yes
+                      {patient.partner ? 'Yes' : 'No'}
                     </Typography>
                   </Box>
-                  <Box sx={{ 
-                    width: '33.33%', 
-                    p: 2,
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '33.33%', p: 2, backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
-                      Topic
+                      Partner Name
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#111827', fontWeight: 500 }}>
-                      N/A
+                      {patient.answers?.partner_name || 'N/A'}
                     </Typography>
                   </Box>
                 </Box>
 
                 {/* Row 4 */}
                 <Box sx={{ display: 'flex' }}>
-                  <Box sx={{ 
-                    width: '100%', 
-                    p: 2,
-                    backgroundColor: 'white'
-                  }}>
+                  <Box sx={{ width: '100%', p: 2, backgroundColor: 'white' }}>
                     <Typography variant="body2" sx={{ color: '#6B7280', mb: 0.5, fontSize: '0.75rem' }}>
                       Priority
                     </Typography>
                     <Typography variant="body1" sx={{ color: '#EF4444', fontWeight: 500 }}>
-                      High
+                      {patient.priority}
                     </Typography>
                   </Box>
                 </Box>
@@ -376,54 +340,70 @@ const PatientDetailsModal = ({ open, onClose, patient, position, anchorPosition 
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#111827' }}>
                 Uploads
               </Typography>
-              
+
               <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Box sx={{ 
-                    border: '1px solid #E5E7EB', 
-                    borderRadius: 2, 
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    minHeight: 120,
-                    backgroundColor: '#FAFAFA'
-                  }}>
-                    <CloudUploadIcon sx={{ color: '#EF4444', fontSize: 36, mb: 1 }} />
-                    <Typography variant="body2" sx={{ color: '#374151', mb: 1, fontWeight: 500 }}>
-                      File name of the inp...
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
-                      08/22/2025 10:30 AM
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Box sx={{ 
-                    border: '1px solid #E5E7EB', 
-                    borderRadius: 2, 
-                    p: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    minHeight: 120,
-                    backgroundColor: '#FAFAFA'
-                  }}>
-                    <CloudUploadIcon sx={{ color: '#EF4444', fontSize: 36, mb: 1 }} />
-                    <Typography variant="body2" sx={{ color: '#374151', mb: 1, fontWeight: 500 }}>
-                      File name of the inp...
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
-                      08/22/2025 10:30 AM
-                    </Typography>
-                  </Box>
-                </Grid>
+                {Object.entries(patient.answers?.files || {}).map(([key, url]) => (
+                  <Grid item xs={6} key={key}>
+                    <Box
+                      sx={{
+                        border: '1px solid #E5E7EB',
+                        borderRadius: 2,
+                        p: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        minHeight: 120,
+                        backgroundColor: '#FAFAFA'
+                      }}
+                    >
+                      <CloudUploadIcon sx={{ color: '#EF4444', fontSize: 36, mb: 1 }} />
+                      <Typography
+                        variant="body2"
+                        sx={{ color: '#374151', mb: 1, fontWeight: 500, wordBreak: 'break-word' }}
+                      >
+                        {url.split('/').pop()}
+                      </Typography>
+                      <Typography variant="caption" sx={{ color: '#9CA3AF' }}>
+                        {new Date(patient.referral_date).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
               </Grid>
             </Box>
 
-            {/* Alerts Section */}
+            {/* Notes Section */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#111827' }}>
+                Notes
+              </Typography>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {patient.answers?.note ? (
+                  <Box
+                    sx={{
+                      border: '1px solid #E5E7EB',
+                      borderRadius: 2,
+                      p: 3
+                    }}
+                  >
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#111827' }}>
+                      {patient.answers?.note_title || 'Note'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#374151', mb: 2, lineHeight: 1.6 }}>
+                      {patient.answers?.note}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                    No notes available.
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+
+             {/* Alerts Section */}
             <Box sx={{ mb: 4 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#111827' }}>
                 Alerts
@@ -498,64 +478,6 @@ const PatientDetailsModal = ({ open, onClose, patient, position, anchorPosition 
                     </IconButton>
                   </Box>
                 ))}
-              </Box>
-            </Box>
-
-            {/* Notes Section */}
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#111827' }}>
-                Notes
-              </Typography>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {notes.map((note) => (
-                  <Box key={note.id} sx={{ 
-                    border: '1px solid #E5E7EB', 
-                    borderRadius: 2, 
-                    p: 3 
-                  }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'start', 
-                      mb: 2 
-                    }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#111827' }}>
-                        {note.title}
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton size="small">
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small">
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </Box>
-                    <Typography variant="body2" sx={{ color: '#374151', mb: 2, lineHeight: 1.6 }}>
-                      {note.content}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: '#6B7280' }}>
-                      {note.date}
-                    </Typography>
-                  </Box>
-                ))}
-                
-                <Button
-                  variant="outlined"
-                  sx={{
-                    textTransform: 'none',
-                    borderColor: '#D1D5DB',
-                    color: '#374151',
-                    '&:hover': {
-                      borderColor: '#9CA3AF',
-                      backgroundColor: '#F9FAFB'
-                    },
-                    py: 1.5
-                  }}
-                >
-                  + Save note
-                </Button>
               </Box>
             </Box>
           </Box>

@@ -8,7 +8,7 @@ import PatientTable from './PatientTable';
 import PatientGrid from './PatientGrid';
 import PaginationComponent from '../ui/Pagination';
 
-const PatientList = ({ patients }) => {
+const PatientList = ({ patients = [] }) => {
   const [view, setView] = useState('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
@@ -19,12 +19,15 @@ const PatientList = ({ patients }) => {
     age: '',
     gender: ''
   });
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const handleFilterChange = (filterName) => (event) => {
     setFilters(prev => ({
       ...prev,
       [filterName]: event.target.value
     }));
+    setPage(1);
   };
 
   // Filter options
@@ -47,6 +50,14 @@ const PatientList = ({ patients }) => {
     );
   });
 
+  // Pagination calculations
+  const totalItems = filteredPatients.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const displayedPatients = filteredPatients.slice(startIndex, endIndex);
+
   return (
     <Box className="bg-white rounded-lg shadow-sm p-6">
       {/* Header */}
@@ -61,7 +72,7 @@ const PatientList = ({ patients }) => {
       <div className="flex flex-wrap gap-3 mb-6">
         <SearchBar 
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
         />
         
         <FilterDropdown
@@ -109,13 +120,20 @@ const PatientList = ({ patients }) => {
 
       {/* Patient Views */}
       {view === 'table' ? (
-        <PatientTable patients={filteredPatients} />
+        <PatientTable patients={displayedPatients} />
       ) : (
-        <PatientGrid patients={filteredPatients} />
+        <PatientGrid patients={displayedPatients} />
       )}
 
       {/* Pagination */}
-      <PaginationComponent />
+      <PaginationComponent
+        currentPage={currentPage}
+        totalPages={totalPages}
+        startItem={totalItems === 0 ? 0 : startIndex + 1}
+        endItem={endIndex}
+        totalItems={totalItems}
+        onPageChange={(_, newPage) => setPage(newPage)}
+      />
     </Box>
   );
 };
