@@ -40,8 +40,12 @@ const PatientList = ({ patients = [] }) => {
     gender: ['Male', 'Female', 'Other']
   };
 
-  // Apply filters
-  const filteredPatients = patients.filter(patient => {
+  const sortedPatients = [...patients].sort((a, b) => 
+    new Date(b.entryDate) - new Date(a.entryDate)
+  );
+
+  // Apply filters on sorted data
+  const filteredPatients = sortedPatients.filter(patient => {
     return (
       patient.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (filters.referrer === '' || patient.referrer === filters.referrer) &&
