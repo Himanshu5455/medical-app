@@ -23,6 +23,7 @@ import { COLORS } from '../components/color/Colors';
 import { ChartBarIcon, ChartGanttIcon } from 'lucide-react';
 import ChatIcon from '@mui/icons-material/Chat';
 import AlertItem from './AlertItem'
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 // Component to render a single patient detail
 const PatientDetail = ({ label, value }) => (
@@ -216,29 +217,37 @@ const PatientDetailsPage = () => {
               Patient Information
             </Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<CheckCircleIcon />}
-            sx={{
-              backgroundColor: COLORS.primary,
-              color: 'white',
-              '&:hover': { backgroundColor: COLORS.primaryHover },
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 3,
-            }}
-          >
-            Mark as complete
-          </Button>
+          <Box sx={{display: 'flex' ,  alignItems: 'center', gap: 2}}>
+            <Button
+              variant="contained"
+              startIcon={<CheckCircleIcon />}
+              sx={{
+                backgroundColor: COLORS.primary,
+                color: 'white',
+                '&:hover': { backgroundColor: COLORS.primaryHover },
+                textTransform: 'none',
+                borderRadius: 2,
+                px: 3,
+              }}
+            >
+              Mark as complete
+            </Button>
+            <button
+              className="min-w-[31px] px-[7px] py-[6px] bg-[#D9D9D9] rounded-[8px]"
+            >
+              <MoreHorizIcon />
+            </button>
+
+          </Box>
         </Box>
 
         <Grid spacing={4}>
-          {/* Single Column - All Content */}
+
           <Grid item xs={12}>
             {/* Patient Info */}
-        
-            <div className="py-8 px-2 mb-2">
-              {/* Header: Name, ID, and Status */}
+
+            <div className="py-8 px-4 mb-2">
+
               <div className="flex items-center gap-4 mb-6">
                 <h2 className="text-2xl font-semibold text-gray-900">
                   {patient.name}
@@ -258,7 +267,7 @@ const PatientDetailsPage = () => {
                 {patientDetails.map((detail, index) => (
                   <div
                     key={index}
-                    className={`w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] pb-4 ${index < patientDetails.length - 4 ? 'border-b border-gray-200' : ''
+                    className={`w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] pb-4 border-b border-gray-200
                       }`}
                   >
                     <p className="text-sm font-medium text-gray-500 mb-1">
@@ -280,11 +289,8 @@ const PatientDetailsPage = () => {
             {/* Uploads Section */}
             <Box
               sx={{
-                // backgroundColor: 'white',
-                // borderRadius: 3,
-                 py: 4,
-                  px: 2,
-                // boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                py: 0,
+                px: 2,
                 mb: 3,
               }}
             >
@@ -335,71 +341,71 @@ const PatientDetailsPage = () => {
             {/* Triage Timeline Section */}
             <Box
               sx={{
-                 mt: 4,
-                 px: 2,
-                 py: 4,
+                mt: 4,
+                px: 2,
+                py: 4,
                 borderRadius: 3,
-              
+
               }}
             >
               <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary }}>
                 Triage Timeline
               </Typography>
-             
+
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
-  {timelineItems.map((item, index) => (
-    <Box
-      key={index}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        p: 1,
-        borderRadius: 2,
-        cursor: 'pointer',
-        '&:hover': { backgroundColor: COLORS.background },
-      }}
-      onClick={() => toggleSection(item.label.toLowerCase().replace(' ', ''))}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {/* Icon always rendered, color changes based on completion */}
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <ChatIcon
-            sx={{
-              fontSize: 20,
-              color: COLORS.textSecondary,
-            }}
-          />
-        </Box>
+                {timelineItems.map((item, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      p: 1,
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      '&:hover': { backgroundColor: COLORS.background },
+                    }}
+                    onClick={() => toggleSection(item.label.toLowerCase().replace(' ', ''))}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {/* Icon always rendered, color changes based on completion */}
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <ChatIcon
+                          sx={{
+                            fontSize: 20,
+                            color: COLORS.textSecondary,
+                          }}
+                        />
+                      </Box>
 
-        <Box>
-          <div className="flex">
-            <Typography variant="body1" sx={{ fontWeight: 500, color: COLORS.textPrimary }}>
-              {item.label}
-              {expandedSections[item.label.toLowerCase().replace(' ', '')] ? (
-                <ExpandLessIcon sx={{ color: COLORS.textSecondary }} />
-              ) : (
-                <ExpandMoreIcon sx={{ color: COLORS.textSecondary }} />
-              )}
-            </Typography>
-          </div>
+                      <Box>
+                        <div className="flex">
+                          <Typography variant="body1" sx={{ fontWeight: 500, color: COLORS.textPrimary }}>
+                            {item.label}
+                            {expandedSections[item.label.toLowerCase().replace(' ', '')] ? (
+                              <ExpandLessIcon sx={{ color: COLORS.textSecondary }} />
+                            ) : (
+                              <ExpandMoreIcon sx={{ color: COLORS.textSecondary }} />
+                            )}
+                          </Typography>
+                        </div>
 
-          <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
-            {item.date}
-          </Typography>
-        </Box>
-      </Box>
-    </Box>
-  ))}
-</Box>
+                        <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
+                          {item.date}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
 
             </Box>
 

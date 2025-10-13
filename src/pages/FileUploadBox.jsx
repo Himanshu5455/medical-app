@@ -12,10 +12,8 @@ const FileUploadBox = ({ patient, onUploadSuccess }) => {
   };
 
   const normalizeFiles = (filesResponse) => {
-    // Accept various shapes and return an object map: { key: url }
     if (!filesResponse) return {};
     if (typeof filesResponse === "object" && !Array.isArray(filesResponse)) {
-      // Already an object map
       return filesResponse;
     }
     if (Array.isArray(filesResponse)) {
