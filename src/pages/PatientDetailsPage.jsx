@@ -20,6 +20,9 @@ import { getTriageBoardByID } from '../services/api';
 import FileUploadBox from './FileUploadBox';
 import Notes from './Notes';
 import { COLORS } from '../components/color/Colors';
+import { ChartBarIcon, ChartGanttIcon } from 'lucide-react';
+import ChatIcon from '@mui/icons-material/Chat';
+import AlertItem from './AlertItem'
 
 // Component to render a single patient detail
 const PatientDetail = ({ label, value }) => (
@@ -81,32 +84,6 @@ const FileItem = ({ url, date }) => (
   </Grid>
 );
 
-// Component to render an alert
-const AlertItem = ({ type, message, color }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      p: 3,
-      borderRadius: 2,
-      backgroundColor: color,
-      border: `1px solid ${color}`,
-    }}
-  >
-    <Box
-      sx={{
-        width: 10,
-        height: 10,
-        borderRadius: '50%',
-        backgroundColor: type === 'info' ? '#2196F3' : type === 'error' ? '#F44336' : '#FF9800',
-        mr: 2,
-      }}
-    />
-    <Typography variant="body1" sx={{ color: COLORS.textPrimary }}>
-      {message}
-    </Typography>
-  </Box>
-);
 
 const PatientDetailsPage = () => {
   const navigate = useNavigate();
@@ -259,88 +236,56 @@ const PatientDetailsPage = () => {
           {/* Single Column - All Content */}
           <Grid item xs={12}>
             {/* Patient Info */}
-            {/* <Box
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: 3,
-                p: 4,
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-                mb: 4,
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary }}>
+        
+            <div className="py-8 px-2 mb-2">
+              {/* Header: Name, ID, and Status */}
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">
                   {patient.name}
-                </Typography>
-                <Typography variant="body1" sx={{ color: COLORS.textSecondary }}>
+                </h2>
+                <span className="text-sm text-gray-500">
                   #{patient.id}
-                </Typography>
-                <Chip
-                  label={Array.isArray(patient.status) ? patient.status.join(', ') : patient.status}
-                  sx={{
-                    backgroundColor: `${statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF'}20`,
-                    color: statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF',
-                    fontWeight: 500,
-                  }}
-                />
-              </Box>
-              <Grid container spacing={4}>
+                </span>
+                <span
+                  className={`inline-flex bg-[#fdf7e5] text-[#efad03] items-center px-2 py-0.5 rounded-md text-sm font-medium `}
+                >
+                  {Array.isArray(patient.status) ? patient.status.join(", ") : patient.status}
+                </span>
+              </div>
+
+              {/* Details Flex */}
+              <div className="flex flex-wrap gap-4">
                 {patientDetails.map((detail, index) => (
-                  <PatientDetail key={index} label={detail.label} value={detail.value} />
+                  <div
+                    key={index}
+                    className={`w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] pb-4 ${index < patientDetails.length - 4 ? 'border-b border-gray-200' : ''
+                      }`}
+                  >
+                    <p className="text-sm font-medium text-gray-500 mb-1">
+                      {detail.label}
+                    </p>
+                    <p
+                      className={`text-base ${detail.label === "Priority" && detail.value === "High"
+                        ? 'text-red-500 font-semibold'
+                        : 'text-gray-900'
+                        }`}
+                    >
+                      {detail.value || "N/A"}
+                    </p>
+                  </div>
                 ))}
-              </Grid>
-            </Box> */}
-
-<div className="bg-white rounded-lg p-6 shadow-[0_1px_3px_0_rgba(0,0,0,0.1)] mb-6">
-  {/* Header: Name, ID, and Status */}
-  <div className="flex items-center gap-4 mb-6">
-    <h2 className="text-2xl font-semibold text-gray-900">
-      {patient.name}
-    </h2>
-    <span className="text-sm text-gray-500">
-      #{patient.id}
-    </span>
-    <span
-      className={`inline-flex bg-[#fdf7e5] text-[#efad03] items-center px-2 py-0.5 rounded-md text-sm font-medium `  }
-    >
-      {Array.isArray(patient.status) ? patient.status.join(", ") : patient.status}
-    </span>
-  </div>
-
-  {/* Details Flex */}
-  <div className="flex flex-wrap gap-4">
-    {patientDetails.map((detail, index) => (
-      <div
-        key={index}
-        className={`w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] pb-4 ${
-          index < patientDetails.length - 4 ? 'border-b border-gray-200' : ''
-        }`}
-      >
-        <p className="text-sm font-medium text-gray-500 mb-1">
-          {detail.label}
-        </p>
-        <p
-          className={`text-base ${
-            detail.label === "Priority" && detail.value === "High"
-              ? 'text-red-500 font-semibold'
-              : 'text-gray-900'
-          }`}
-        >
-          {detail.value || "N/A"}
-        </p>
-      </div>
-    ))}
-  </div>
-</div>
+              </div>
+            </div>
 
             {/* Uploads Section */}
             <Box
               sx={{
-                backgroundColor: 'white',
-                borderRadius: 3,
-                p: 4,
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-                mb: 4,
+                // backgroundColor: 'white',
+                // borderRadius: 3,
+                 py: 4,
+                  px: 2,
+                // boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                mb: 3,
               }}
             >
               <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}>
@@ -364,25 +309,7 @@ const PatientDetailsPage = () => {
               </Grid>
             </Box>
 
-            {/* Notes Section */}
 
-            <Box
-              sx={{
-                backgroundColor: "white",
-                borderRadius: 3,
-                p: 4,
-                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
-              }}
-            >
-              <Typography
-                variant="h5"
-                sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}
-              >
-                Notes
-              </Typography>
-
-              <Notes patient={patient} />
-            </Box>
 
             {/* Alerts Section */}
             <Box
@@ -408,63 +335,91 @@ const PatientDetailsPage = () => {
             {/* Triage Timeline Section */}
             <Box
               sx={{
-                backgroundColor: 'white',
+                 mt: 4,
+                 px: 2,
+                 py: 4,
                 borderRadius: 3,
-                p: 4,
-                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-                mt: 4,
+              
               }}
             >
-              <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}>
+              <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary }}>
                 Triage Timeline
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {timelineItems.map((item, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      p: 3,
-                      border: `1px solid ${COLORS.border}`,
-                      borderRadius: 2,
-                      cursor: 'pointer',
-                      '&:hover': { backgroundColor: COLORS.background },
-                    }}
-                    onClick={() => toggleSection(item.label.toLowerCase().replace(' ', ''))}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <Box
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          backgroundColor: item.completed ? '#10B981' : COLORS.border,
-                          borderRadius: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {item.completed && <CheckCircleIcon sx={{ fontSize: 16, color: 'white' }} />}
-                      </Box>
-                      <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500, color: COLORS.textPrimary }}>
-                          {item.label}
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
-                          {item.date ? new Date(item.date).toLocaleString() : 'Pending'}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    {expandedSections[item.label.toLowerCase().replace(' ', '')] ? (
-                      <ExpandLessIcon sx={{ color: COLORS.textSecondary }} />
-                    ) : (
-                      <ExpandMoreIcon sx={{ color: COLORS.textSecondary }} />
-                    )}
-                  </Box>
-                ))}
-              </Box>
+             
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+  {timelineItems.map((item, index) => (
+    <Box
+      key={index}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        p: 1,
+        borderRadius: 2,
+        cursor: 'pointer',
+        '&:hover': { backgroundColor: COLORS.background },
+      }}
+      onClick={() => toggleSection(item.label.toLowerCase().replace(' ', ''))}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {/* Icon always rendered, color changes based on completion */}
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <ChatIcon
+            sx={{
+              fontSize: 20,
+              color: COLORS.textSecondary,
+            }}
+          />
+        </Box>
+
+        <Box>
+          <div className="flex">
+            <Typography variant="body1" sx={{ fontWeight: 500, color: COLORS.textPrimary }}>
+              {item.label}
+              {expandedSections[item.label.toLowerCase().replace(' ', '')] ? (
+                <ExpandLessIcon sx={{ color: COLORS.textSecondary }} />
+              ) : (
+                <ExpandMoreIcon sx={{ color: COLORS.textSecondary }} />
+              )}
+            </Typography>
+          </div>
+
+          <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
+            {item.date}
+          </Typography>
+        </Box>
+      </Box>
+    </Box>
+  ))}
+</Box>
+
+            </Box>
+
+            {/* Notes Section */}
+            <Box
+              sx={{
+                backgroundColor: "white",
+                borderRadius: 3,
+                p: 4,
+                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}
+              >
+                Notes
+              </Typography>
+
+              <Notes patient={patient} />
             </Box>
           </Grid>
         </Grid>
