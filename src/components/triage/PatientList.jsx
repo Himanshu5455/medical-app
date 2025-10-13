@@ -7,15 +7,19 @@ import ViewToggle from '../common/ViewToggle';
 import PatientTable from './PatientTable';
 import PatientGrid from './PatientGrid';
 import PaginationComponent from '../ui/Pagination';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
-const PatientList = ({ patients = [] }) => {
+
+const PatientList = ({ patients = [], ageOptions = [] }) => {
   const [view, setView] = useState('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     referrer: '',
     status: '',
     priority: '',
-    entryDate: '',
+    entryDate: null,
     age: '',
     gender: ''
   });
@@ -36,23 +40,72 @@ const PatientList = ({ patients = [] }) => {
     status: [...new Set(patients.map(p => p.status))],
     priority: [...new Set(patients.map(p => p.priority))],
     entryDate: ['Today', 'This Week', 'This Month'],
-    age: ['0-18', '19-35', '36-50', '51+'],
+    age: (() => {
+      const AGE_BUCKETS = ['0-20', '21-50', '51-90', '91-110', '111+'];
+      const hasNone = patients.some(p => !p.age || p.age === '-' || String(p.age).toLowerCase() === 'none');
+      return hasNone ? [...AGE_BUCKETS, 'None'] : AGE_BUCKETS;
+    })(),
     gender: ['Male', 'Female', 'Other']
   };
 
-  const sortedPatients = [...patients].sort((a, b) => 
+  const sortedPatients = [...patients].sort((a, b) =>
     new Date(b.entryDate) - new Date(a.entryDate)
   );
 
-  // Apply filters on sorted data
   const filteredPatients = sortedPatients.filter(patient => {
-    return (
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (filters.referrer === '' || patient.referrer === filters.referrer) &&
-      (filters.status === '' || patient.status === filters.status) &&
-      (filters.priority === '' || patient.priority === filters.priority)
-    );
+    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesReferrer = filters.referrer === '' || patient.referrer === filters.referrer;
+    const matchesStatus = filters.status === '' || patient.status === filters.status;
+    const matchesPriority = filters.priority === '' || patient.priority === filters.priority;
+
+    let matchesEntryDate = true;
+    if (filters.entryDate) {
+      const patientDate = new Date(patient.entryDate).toDateString();
+      const selectedDate = new Date(filters.entryDate).toDateString();
+      matchesEntryDate = patientDate === selectedDate;
+    }
+
+    let matchesAge = true;
+    if (filters.age) {
+      const selected = String(filters.age);
+      const paNum = patient.ageNumber ?? (patient.age ? Number(patient.age) : NaN);
+
+      if (selected.includes('-') || selected.endsWith('+')) {
+        let min = NaN;
+        let max = NaN;
+        if (selected.endsWith('+')) {
+          const minS = selected.replace('+', '').trim();
+          min = Number(minS);
+          max = Infinity;
+        } else {
+          const parts = selected.split('-').map(s => s.trim());
+          min = Number(parts[0]);
+          max = Number(parts[1]);
+        }
+
+        if (Number.isNaN(min) || Number.isNaN(max)) {
+          matchesAge = false;
+        } else if (!Number.isNaN(paNum)) {
+          matchesAge = paNum >= min && paNum <= max;
+        } else {
+          matchesAge = false;
+        }
+      } else {
+        const selNum = Number(selected);
+        if (!Number.isNaN(selNum) && !Number.isNaN(paNum)) {
+          matchesAge = paNum === selNum;
+        } else if (selected.toLowerCase() === 'none') {
+          matchesAge = !patient.age || patient.age === '-' || String(patient.age).toLowerCase() === 'none';
+        } else {
+          const patientAgeStr = patient.age === '-' ? '' : String(patient.age);
+          matchesAge = patientAgeStr === selected;
+        }
+      }
+    }
+
+    return matchesSearch && matchesReferrer && matchesStatus && matchesPriority && matchesEntryDate && matchesAge;
   });
+
 
   // Pagination calculations
   const totalItems = filteredPatients.length;
@@ -74,25 +127,25 @@ const PatientList = ({ patients = [] }) => {
 
       {/* Filter Bar */}
       <div className="flex flex-wrap gap-3 mb-6">
-        <SearchBar 
+        <SearchBar
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
         />
-        
+
         <FilterDropdown
           label="Referrer"
           value={filters.referrer}
           onChange={handleFilterChange('referrer')}
           options={filterOptions.referrer}
         />
-        
+
         <FilterDropdown
           label="Status"
           value={filters.status}
           onChange={handleFilterChange('status')}
           options={filterOptions.status}
         />
-        
+
         <FilterDropdown
           label="Priority"
           value={filters.priority}
@@ -100,20 +153,31 @@ const PatientList = ({ patients = [] }) => {
           options={filterOptions.priority}
         />
         
-        <FilterDropdown
-          label="Entry date"
-          value={filters.entryDate}
-          onChange={handleFilterChange('entryDate')}
-          options={filterOptions.entryDate}
-        />
-        
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DatePicker
+            label="Entry Date"
+            value={filters.entryDate}
+            onChange={(newDate) => {
+              setFilters(prev => ({ ...prev, entryDate: newDate }));
+              setPage(1);
+            }}
+            slotProps={{
+              textField: {
+                size: "small",
+                sx: { minWidth: 180 }
+              }
+            }}
+          />
+        </LocalizationProvider>
+
+
         <FilterDropdown
           label="Age"
           value={filters.age}
           onChange={handleFilterChange('age')}
           options={filterOptions.age}
         />
-        
+
         <FilterDropdown
           label="Gender"
           value={filters.gender}

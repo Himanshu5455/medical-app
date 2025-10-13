@@ -126,11 +126,17 @@ export const addUser = async (form) => {
   };
 
   const user = await http.post('/auth/create-staff-user', payload);
+  // The backend may not echo all submitted fields immediately; use fallbacks
+  const firstName = user.first_name ?? form.firstName ?? '';
+  const lastName = user.last_name ?? form.lastName ?? '';
+  const username = user.username ?? form.email ?? '';
+  const role = user.role ?? form.role ?? '';
+
   return {
     id: user.id,
-    name: `${user.first_name} ${user.last_name}`,
-    email: user.username,
-    role: user.role,
+    name: `${firstName} ${lastName}`.trim(),
+    email: username,
+    role,
     status: "Active",
   };
 };
@@ -199,6 +205,22 @@ export const patchCustomerNotes = async (customerId, notesData) => {
   console.log('Notes updated:', data);
   return data;
 };
+
+
+
+// fetch customer notes
+export const getCustomerNotes = async (customerId) => {
+  try {
+    const response = await http.get(`/dashboard/customers/${customerId}/notes`);
+    // depending on http wrapper this may be the axios response or already data; try to normalize
+    console.log('Fetched notes (raw):', response?.data ?? response);
+    return response?.data ?? response;
+  } catch (error) {
+    console.error('Error fetching notes:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 
 // update customer status
 export const updateCustomerStatus = async (customerId, status) => {

@@ -17,7 +17,7 @@ http.interceptors.response.use(
   (response) => response.data,
   (error) => {
     const status = error.response?.status;
-    const data = error.response?.data;
+    const data = error.response?.data; 
     const detail = data?.message || data?.error || error.message;
     const err = new Error(detail || 'Request failed');
     err.status = status;

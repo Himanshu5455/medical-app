@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { MoreVertical } from "lucide-react";
-import { getUsers } from "../services/api";
+import { getUsers, deleteUser } from "../services/api";
 import AddUserPopup from "./AddUserPopup";
 import EditUser from "./EditUser";
 import Deactivate from "./Deactivate";
@@ -16,10 +16,8 @@ const UserManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeaModalOpen, setIsDeaModalOpen] = useState(false);
-
   const [selectedUser, setSelectedUser] = useState(null);
-
-
+    const [isDeactivating, setIsDeactivating] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,17 +38,6 @@ const UserManagement = () => {
     // newUser is already mapped to table shape by API layer
     setUsers((prev) => [newUser, ...prev]);
   };
-
-  // const toggleStatus = (id) => {
-  //   setUsers(
-  //     users.map(u =>
-  //       u.id === id
-  //         ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" }
-  //         : u
-  //     )
-  //   );
-  // };
-
   const filteredUsers = users.filter(
     u =>
       u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,6 +74,25 @@ const UserManagement = () => {
       setUsers(fresh);
     } catch (e) {
      
+    }
+  };
+
+  const handleDeactivate = async (userId) => {
+    setIsDeactivating(true);
+    try {
+   
+      await deleteUser(userId);
+      // remove from local state
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+    } catch (e) {
+      console.error('Failed to deactivate user', e);
+      // optionally show a message to the user
+      // eslint-disable-next-line no-alert
+      alert('Failed to deactivate user. See console for details.');
+    } finally {
+      setIsDeactivating(false);
+      setIsDeaModalOpen(false);
+      setSelectedUser(null);
     }
   };
 
@@ -166,7 +172,12 @@ const UserManagement = () => {
                       <div className="absolute top-8 right-6 mt-2 w-36 bg-white shadow-lg rounded-lg z-10 border border-gray-200">
                         <div className="flex flex-col gap-2 p-2">
                           <button className="text-sm text-gray-700 hover:underline text-left"
-                           onClick={() => { setIsDeaModalOpen(true);}}
+                            onClick={() => {
+                              // pick this user and open the deactivate confirmation modal
+                              setSelectedUser(user);
+                              setIsDeaModalOpen(true);
+                              setOpenUserId(null); // close dropdown
+                            }}
                             // onClick={() => {
                             //   toggleStatus(user.id);
                             //   setOpenUserId(null);
@@ -208,10 +219,18 @@ const UserManagement = () => {
           user={selectedUser}
           onUpdate={handleUpdateUser}
         />
-        {/* <Deactivate 
-        isOpen={isDeaModalOpen}
-         onClose={() =>setIsDeaModalOpen (false)}
-        /> */}
+        <Deactivate
+          isOpen={isDeaModalOpen}
+          isLoading={isDeactivating}
+          onClose={() => {
+            // if a deactivation is in progress, block closing
+            if (isDeactivating) return;
+            setIsDeaModalOpen(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+          onConfirm={() => selectedUser && handleDeactivate(selectedUser.id)}
+        />
       </div>
 
       <div className="flex justify-end items-center mt-4 gap-2 text-gray-500 text-sm">

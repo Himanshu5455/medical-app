@@ -14,7 +14,7 @@ const FilterDropdown = ({ label, value, onChange, options }) => {
         onChange={onChange}
       >
         <MenuItem value="">
-          <em>All</em>
+          All
         </MenuItem>
         {options.map((option) => (
           <MenuItem key={option} value={option}>

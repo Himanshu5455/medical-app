@@ -12,42 +12,6 @@ const LoginPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setError("");
-//     setLoading(true);
-
-//     console.log("Payload:", {
-//   username: formData.username,
-//   password: formData.password,
-// });
-
-//     try {
-//       const result = await loginUser({
-//         username: formData.username,
-//         password: formData.password,
-//       });
-
-//       console.log("Login success:", result);
-
-//       if (result.success) {
-//         // Optional: store token if returned
-//         // localStorage.setItem("token", result.token);
-
-//         navigate("/login/dashboard");
-//       } else {
-//         setError(result.message || "Invalid username or password");
-//       }
-//     } catch (err) {
-//       console.error("Login error:", err);
-//       setError(err.message || "Something went wrong");
-//     }
-//      finally {
-//       setLoading(false);
-//     }
-//   };
-
-
 const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
@@ -59,14 +23,14 @@ const handleSubmit = async (e) => {
         username: formData.username,
         password: formData.password,
       },
-      true // 👈 change to false if backend expects JSON
+      true 
     );
 
     console.log("Login response:", result);
 
     if (result?.access_token) {
       localStorage.setItem("token", result.access_token);
-      navigate("/login/dashboard");
+      navigate("/admin/dashboard");
     } else {
       setError("Invalid username or password");
     }

@@ -37,6 +37,8 @@ import { QUESTIONS } from '../data/questions';
 import { registerCustomer, serializeCustomerPayload } from '../services/api';
 
 const ChatbotQuestionnaire = () => {
+  // Track if welcome message streaming is done
+  const [welcomeStreamed, setWelcomeStreamed] = useState(false);
   const dispatch = useDispatch();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -64,6 +66,29 @@ const ChatbotQuestionnaire = () => {
   // Handler for when streaming completes
   const handleStreamingComplete = () => {
     setIsStreamingActive(false);
+    // If the last message is the welcome message and not yet streamed, show first question
+    if (!welcomeStreamed && chatHistory.length > 0) {
+      const lastMsg = chatHistory[chatHistory.length - 1];
+      // Only dispatch first question if chatHistory contains only the welcome message
+      if (lastMsg.questionId === 'welcome' && chatHistory.length === 1) {
+        setWelcomeStreamed(true);
+        setIsStreamingActive(true);
+        const firstQuestion = getVisibleQuestions(answers)[0];
+        const messageData = {
+          type: 'bot',
+          message: firstQuestion.question,
+          timestamp: new Date().toISOString(),
+          questionId: firstQuestion.id,
+          shouldStream: true
+        };
+        if (firstQuestion.type === 'select' && firstQuestion.options) {
+          messageData.options = firstQuestion.options;
+        } else if (firstQuestion.type === 'boolean') {
+          messageData.showBooleanOptions = true;
+        }
+        dispatch(addToChatHistory(messageData));
+      }
+    }
   };
 
   // Check if user has started messaging (answered at least one question)
@@ -78,10 +103,10 @@ const ChatbotQuestionnaire = () => {
     localStorage.removeItem('questionnaire');
     initializedRef.current = false;
     setIsAwaitingConfirmation(false);
-
-    // Send welcome message and first question again
+    setWelcomeStreamed(false);
+    // Only send welcome message; first question will be sent after streaming completes
     setTimeout(() => {
-      setIsStreamingActive(true); // Set streaming state
+      setIsStreamingActive(true);
       dispatch(addToChatHistory({
         type: 'bot',
         message: "Hello! I'm Maya, your medical triage assistant. I'll help you by asking a few questions to understand your situation better.",
@@ -89,28 +114,6 @@ const ChatbotQuestionnaire = () => {
         questionId: 'welcome',
         shouldStream: true
       }));
-
-      // Wait for welcome message to finish streaming before sending first question
-      setTimeout(() => {
-        setIsStreamingActive(true); // Set streaming state  
-        const firstQuestion = getVisibleQuestions(answers)[0];
-        const messageData = {
-          type: 'bot',
-          message: firstQuestion.question,
-          timestamp: new Date().toISOString(),
-          questionId: firstQuestion.id,
-          shouldStream: true
-        };
-
-        // Add options if question has them
-        if (firstQuestion.type === 'select' && firstQuestion.options) {
-          messageData.options = firstQuestion.options;
-        } else if (firstQuestion.type === 'boolean') {
-          messageData.showBooleanOptions = true;
-        }
-
-        dispatch(addToChatHistory(messageData));
-      }, 4600); // Wait for welcome message to complete streaming
     }, 500);
   };
 
@@ -129,27 +132,24 @@ const ChatbotQuestionnaire = () => {
     // localStorage.removeItem('questionnaire'); // Uncomment this line to reset
 
     const savedData = localStorage.getItem('questionnaire');
-    let shouldSendFirstQuestion = true;
+    let hasHistory = false;
 
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
         dispatch(loadFromStorage(parsed));
-
-        // Only skip first question if there's already chat history
         if (parsed.chatHistory && parsed.chatHistory.length > 0) {
-          shouldSendFirstQuestion = false;
+          hasHistory = true;
         }
       } catch (error) {
         console.error('Error loading saved questionnaire data:', error);
       }
     }
 
-
-    if (shouldSendFirstQuestion && QUESTIONS.length > 0) {
-
-      // Send welcome message immediately
-      setIsStreamingActive(true); // Set streaming state
+    // If no chat history, start with only the welcome message
+    if (!hasHistory && QUESTIONS.length > 0) {
+      setWelcomeStreamed(false);
+      setIsStreamingActive(true);
       dispatch(addToChatHistory({
         type: 'bot',
         message: "Hello! I'm Maya, your medical triage assistant. I'll help you by asking a few questions to understand your situation better.",
@@ -157,31 +157,7 @@ const ChatbotQuestionnaire = () => {
         questionId: 'welcome',
         shouldStream: true
       }));
-
-      // Send the actual first question after welcome message completes streaming
-      // Welcome message has ~120 characters, at 30ms per char = ~3600ms + 1000ms buffer = 4600ms
-      setTimeout(() => {
-
-        setIsStreamingActive(true); // Set streaming state
-        // const firstQuestion = QUESTIONS[0];
-        const firstQuestion = getVisibleQuestions(answers)[0];
-        const messageData = {
-          type: 'bot',
-          message: firstQuestion.question,
-          timestamp: new Date().toISOString(),
-          questionId: firstQuestion.id,
-          shouldStream: true
-        };
-
-        // Add options if question has them
-        if (firstQuestion.type === 'select' && firstQuestion.options) {
-          messageData.options = firstQuestion.options;
-        } else if (firstQuestion.type === 'boolean') {
-          messageData.showBooleanOptions = true;
-        }
-
-        dispatch(addToChatHistory(messageData));
-      }, 4600); // Increased delay to allow welcome message to finish streaming
+      // First question will be sent after welcome streaming completes
     }
 
     initializedRef.current = true;

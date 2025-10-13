@@ -1,56 +1,194 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
+import PropTypes from 'prop-types';
+import {
+  Box,
+  Grid,
+  Typography,
+  CircularProgress,
+  Button,
+  Chip,
+  IconButton,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { statusColors } from '../utils/constants';
 import { getTriageBoardByID } from '../services/api';
+import FileUploadBox from './FileUploadBox';
+import Notes from './Notes';
+import { COLORS } from '../components/color/Colors';
+
+// Component to render a single patient detail
+const PatientDetail = ({ label, value }) => (
+  <Grid item xs={12} sm={6} md={3}>
+    <Typography variant="body2" sx={{ color: COLORS.textSecondary, mb: 1 }}>
+      {label}
+    </Typography>
+    <Typography
+      variant="h6"
+      sx={{
+        color: label === 'Priority' ? COLORS.error : COLORS.textPrimary,
+        fontWeight: 500,
+      }}
+    >
+      {value || 'N/A'}
+    </Typography>
+  </Grid>
+);
+
+// Component to render a file upload item
+const FileItem = ({ url, date }) => (
+  <Grid item xs={12} sm={6} md={4}>
+    <Box
+      sx={{
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: 2,
+        p: 3,
+        backgroundColor: COLORS.background,
+        textAlign: 'center',
+      }}
+    >
+      <Box
+        sx={{
+          width: 60,
+          height: 60,
+          backgroundColor: COLORS.error,
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mx: 'auto',
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
+          PDF
+        </Typography>
+      </Box>
+      <Typography
+        variant="body1"
+        sx={{ color: COLORS.textPrimary, mb: 1, fontWeight: 500, wordBreak: 'break-word' }}
+      >
+        {url.split('/').pop()}
+      </Typography>
+      <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
+        {date ? new Date(date).toLocaleString() : 'N/A'}
+      </Typography>
+    </Box>
+  </Grid>
+);
+
+// Component to render an alert
+const AlertItem = ({ type, message, color }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      p: 3,
+      borderRadius: 2,
+      backgroundColor: color,
+      border: `1px solid ${color}`,
+    }}
+  >
+    <Box
+      sx={{
+        width: 10,
+        height: 10,
+        borderRadius: '50%',
+        backgroundColor: type === 'info' ? '#2196F3' : type === 'error' ? '#F44336' : '#FF9800',
+        mr: 2,
+      }}
+    />
+    <Typography variant="body1" sx={{ color: COLORS.textPrimary }}>
+      {message}
+    </Typography>
+  </Box>
+);
 
 const PatientDetailsPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [patient, setPatient] = useState(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await getTriageBoardByID(id);
-        setPatient(result);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchData();
-  }, [id]);
-
-  // Hooks must be declared before any conditional returns to keep order stable
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
     initialContact: true,
     symptomAssessment: false,
     riskEvaluation: false,
     examUpload: false,
-    triageComplete: false
+    triageComplete: false,
   });
 
-  // Handle case when patient is not found
-  if (!patient) {
+  // Hardcoded alerts (restored as per request)
+  const alerts = [
+    { type: 'info', message: 'New notes', color: '#E3F2FD' },
+    { type: 'error', message: 'High risk detected', color: '#FFEBEE' },
+    { type: 'warning', message: 'Incomplete Information', color: '#FFF8E1' },
+  ];
+
+  // Fetch patient data
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await getTriageBoardByID(id);
+        setPatient(result);
+      } catch (err) {
+        console.error('Failed to fetch patient data:', err);
+        setError('Unable to load patient data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [id]);
+
+  // Toggle expandable sections
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
+  // Render loading state
+  if (loading) {
     return (
-      <Box sx={{ backgroundColor: '#F9FAFB', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          backgroundColor: COLORS.background,
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Render error or not found state
+  if (error || !patient) {
+    return (
+      <Box
+        sx={{
+          backgroundColor: COLORS.background,
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="h5" sx={{ mb: 2 }}>Patient not found</Typography>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            {error || 'Patient not found'}
+          </Typography>
           <Button variant="contained" onClick={() => navigate(-1)}>
             Go Back
           </Button>
@@ -58,240 +196,226 @@ const PatientDetailsPage = () => {
       </Box>
     );
   }
-  
 
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
-  const alerts = [
-    { type: 'info', message: 'New notes', color: '#E3F2FD' },
-    { type: 'error', message: 'High risk detected', color: '#FFEBEE' },
-    { type: 'warning', message: 'Incomplete Information', color: '#FFF8E1' }
+  // Patient details data
+  const patientDetails = [
+    { label: 'Age', value: patient.answers?.age },
+    { label: 'Contact', value: patient.contact_info?.phone },
+    { label: 'Email', value: patient.contact_info?.email },
+    { label: 'Referrer', value: patient.answers?.referring },
+    { label: 'Referral reason', value: patient.answers?.referral_reason },
+    { label: 'Partner', value: patient.partner ? 'Yes' : 'No' },
+    { label: 'Partner Name', value: patient.answers?.partner_name },
+    { label: 'Priority', value: patient.priority },
   ];
 
+  // Timeline items (partially derived from patient data)
   const timelineItems = [
-    { label: 'Initial contact', date: '08/22/2025 10:35 AM', completed: true },
-    { label: 'Symptom Assessment', date: '08/22/2025 10:35 AM', completed: false },
-    { label: 'Risk Evaluation', date: '08/22/2025 10:35 AM', completed: false },
-    { label: 'Exam upload', date: '08/22/2025 10:35 AM', completed: false },
-    { label: 'Triage complete', date: '08/22/2025 10:35 AM', completed: true }
+    { label: 'Initial Contact', date: patient.referral_date, completed: !!patient.referral_date },
+    { label: 'Symptom Assessment', date: null, completed: false },
+    { label: 'Risk Evaluation', date: null, completed: false },
+    { label: 'Exam Upload', date: null, completed: false },
+    { label: 'Triage Complete', date: patient.status === 'Complete' ? patient.referral_date : null, completed: patient.status === 'Complete' },
   ];
 
   return (
-    <Box sx={{ backgroundColor: '#F9FAFB', minHeight: '100vh' }}>
-      <Container maxWidth="lg" sx={{ py: 3 }}>
+    <Box
+      sx={{
+        backgroundColor: COLORS.background,
+        minHeight: '100vh',
+        maxWidth: '1250px',
+        mx: 'auto',
+        px: 2,
+      }}
+    >
+      <div className="container mx-auto py-6 px-4">
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton onClick={() => navigate(-1)} size="small">
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* <IconButton onClick={() => navigate(-1)} size="small">
               <ArrowBackIcon />
-            </IconButton>
-            <Typography variant="h4" sx={{ fontWeight: 600, color: '#111827' }}>
+            </IconButton> */}
+            <Typography variant="h4" sx={{ fontWeight: 600, color: COLORS.textPrimary }}>
               Patient Information
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button
-              variant="contained"
-              startIcon={<CheckCircleIcon />}
-              sx={{
-                backgroundColor: '#125A67',
-                color: 'white',
-                '&:hover': { backgroundColor: '#0F4A54' },
-                textTransform: 'none',
-                borderRadius: 2,
-                px: 3
-              }}
-            >
-              Mark as complete
-            </Button>
-            <IconButton size="small">
-              <MoreHorizIcon />
-            </IconButton>
-          </Box>
+          <Button
+            variant="contained"
+            startIcon={<CheckCircleIcon />}
+            sx={{
+              backgroundColor: COLORS.primary,
+              color: 'white',
+              '&:hover': { backgroundColor: COLORS.primaryHover },
+              textTransform: 'none',
+              borderRadius: 2,
+              px: 3,
+            }}
+          >
+            Mark as complete
+          </Button>
         </Box>
 
-        <Grid container spacing={4}>
-          {/* Left Column - Patient Info */}
-          <Grid item xs={12} lg={8}>
-            <Box sx={{ backgroundColor: 'white', borderRadius: 3, p: 4, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', mb: 4 }}>
-              {/* Patient Info Header */}
+        <Grid spacing={4}>
+          {/* Single Column - All Content */}
+          <Grid item xs={12}>
+            {/* Patient Info */}
+            {/* <Box
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 3,
+                p: 4,
+                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                mb: 4,
+              }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827' }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary }}>
                   {patient.name}
                 </Typography>
-                <Typography variant="body1" sx={{ color: '#6B7280' }}>
+                <Typography variant="body1" sx={{ color: COLORS.textSecondary }}>
                   #{patient.id}
                 </Typography>
                 <Chip
                   label={Array.isArray(patient.status) ? patient.status.join(', ') : patient.status}
-                  size="medium"
                   sx={{
-                    backgroundColor: (statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF') + '20',
+                    backgroundColor: `${statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF'}20`,
                     color: statusColors[Array.isArray(patient.status) ? patient.status[0] : patient.status] || '#9CA3AF',
-                    fontWeight: 500
+                    fontWeight: 500,
                   }}
                 />
-                <IconButton size="small">
-                  <MoreHorizIcon />
-                </IconButton>
               </Box>
-
-              {/* Patient Details Grid */}
               <Grid container spacing={4}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Age</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.answers?.age || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Contact</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.contact_info?.phone || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Email</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.contact_info?.email || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Referrer</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.answers?.referring || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Referral reason</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.answers?.referral_reason || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Partner</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.partner ? 'Yes' : 'No'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Partner Name</Typography>
-                  <Typography variant="h6" sx={{ color: '#111827', fontWeight: 500 }}>{patient.answers?.partner_name || 'N/A'}</Typography>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Typography variant="body2" sx={{ color: '#6B7280', mb: 1 }}>Priority</Typography>
-                  <Typography variant="h6" sx={{ color: '#EF4444', fontWeight: 500 }}>{patient.priority}</Typography>
-                </Grid>
+                {patientDetails.map((detail, index) => (
+                  <PatientDetail key={index} label={detail.label} value={detail.value} />
+                ))}
               </Grid>
-            </Box>
+            </Box> */}
+
+<div className="bg-white rounded-lg p-6 shadow-[0_1px_3px_0_rgba(0,0,0,0.1)] mb-6">
+  {/* Header: Name, ID, and Status */}
+  <div className="flex items-center gap-4 mb-6">
+    <h2 className="text-2xl font-semibold text-gray-900">
+      {patient.name}
+    </h2>
+    <span className="text-sm text-gray-500">
+      #{patient.id}
+    </span>
+    <span
+      className={`inline-flex bg-[#fdf7e5] text-[#efad03] items-center px-2 py-0.5 rounded-md text-sm font-medium `  }
+    >
+      {Array.isArray(patient.status) ? patient.status.join(", ") : patient.status}
+    </span>
+  </div>
+
+  {/* Details Flex */}
+  <div className="flex flex-wrap gap-4">
+    {patientDetails.map((detail, index) => (
+      <div
+        key={index}
+        className={`w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(25%-0.75rem)] pb-4 ${
+          index < patientDetails.length - 4 ? 'border-b border-gray-200' : ''
+        }`}
+      >
+        <p className="text-sm font-medium text-gray-500 mb-1">
+          {detail.label}
+        </p>
+        <p
+          className={`text-base ${
+            detail.label === "Priority" && detail.value === "High"
+              ? 'text-red-500 font-semibold'
+              : 'text-gray-900'
+          }`}
+        >
+          {detail.value || "N/A"}
+        </p>
+      </div>
+    ))}
+  </div>
+</div>
 
             {/* Uploads Section */}
-            <Box sx={{ backgroundColor: 'white', borderRadius: 3, p: 4, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', mb: 4 }}>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827', mb: 4 }}>Uploads</Typography>
+            <Box
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 3,
+                p: 4,
+                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                mb: 4,
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}>
+                Uploads
+              </Typography>
               <Grid container spacing={3}>
                 {Object.entries(patient.answers?.files || {}).map(([key, url]) => (
-                  <Grid item xs={12} sm={6} md={4} key={key}>
-                    <Box sx={{ border: '1px solid #E5E7EB', borderRadius: 2, p: 3, backgroundColor: '#F9FAFB', textAlign: 'center' }}>
-                      <Box sx={{ width: 60, height: 60, backgroundColor: '#EF4444', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>
-                        <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>PDF</Typography>
-                      </Box>
-                      <Typography variant="body1" sx={{ color: '#111827', mb: 1, fontWeight: 500, wordBreak: 'break-word' }}>
-                        {url.split('/').pop()}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#6B7280' }}>
-                        {new Date(patient.referral_date).toLocaleString()}
-                      </Typography>
-                    </Box>
-                  </Grid>
+                  <FileItem key={key} url={url} date={patient.referral_date} />
                 ))}
-                {/* Optional Upload Box */}
                 <Grid item xs={12} sm={6} md={4}>
-                  <Box sx={{
-                    border: '2px dashed #D1D5DB',
-                    borderRadius: 2,
-                    p: 4,
-                    textAlign: 'center',
-                    backgroundColor: '#FAFAFA',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}>
-                    <CloudUploadIcon sx={{ fontSize: 40, color: '#9CA3AF', mb: 2 }} />
-                    <Typography variant="body1" sx={{ color: '#374151', mb: 1 }}>Drag and drop</Typography>
-                    <Typography variant="body2" sx={{ color: '#6B7280' }}>Or click to browse your files</Typography>
-                  </Box>
+                  <FileUploadBox
+                    patient={patient}
+                    onUploadSuccess={(newFiles) =>
+                      setPatient((prev) => ({
+                        ...prev,
+                        answers: { ...prev.answers, files: newFiles },
+                      }))
+                    }
+                  />
                 </Grid>
               </Grid>
             </Box>
 
             {/* Notes Section */}
-            <Box sx={{ backgroundColor: 'white', borderRadius: 3, p: 4, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827', mb: 4 }}>Notes</Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {patient.answers?.note ? (
-                  <Box sx={{ border: '1px solid #E5E7EB', borderRadius: 2, p: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827' }}>{patient.answers.note_title || 'Note'}</Typography>
-                    <Typography variant="body1" sx={{ color: '#374151', mb: 2, lineHeight: 1.6 }}>{patient.answers.note}</Typography>
-                  </Box>
-                ) : (
-                  <Typography variant="body2" sx={{ color: '#6B7280' }}>No notes available.</Typography>
-                )}
-                <Button variant="outlined" size="large" sx={{
-                  textTransform: 'none',
-                  borderColor: '#D1D5DB',
-                  color: '#374151',
-                  '&:hover': { borderColor: '#9CA3AF', backgroundColor: '#F9FAFB' },
-                  py: 2
-                }}>+ Save note</Button>
-              </Box>
-            </Box>
-          </Grid>
 
-          {/* Right Column - Alerts & Timeline */}
-          <Grid item xs={12} lg={4}>
+            <Box
+              sx={{
+                backgroundColor: "white",
+                borderRadius: 3,
+                p: 4,
+                boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}
+              >
+                Notes
+              </Typography>
+
+              <Notes patient={patient} />
+            </Box>
+
             {/* Alerts Section */}
-            <Box sx={{ 
-              backgroundColor: 'white', 
-              borderRadius: 3, 
-              p: 4,
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-              mb: 4
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827', mb: 3 }}>
+            <Box
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 3,
+                p: 4,
+                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                mb: 4,
+                mt: 4,
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 3 }}>
                 Alerts
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {alerts.map((alert, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      p: 3,
-                      borderRadius: 2,
-                      backgroundColor: alert.color,
-                      border: '1px solid ' + alert.color
-                    }}
-                  >
-                    <Box sx={{ 
-                      width: 10, 
-                      height: 10, 
-                      borderRadius: '50%',
-                      backgroundColor: alert.type === 'info' ? '#2196F3' : 
-                                     alert.type === 'error' ? '#F44336' : '#FF9800',
-                      mr: 2
-                    }} />
-                    <Typography variant="body1" sx={{ color: '#374151' }}>
-                      {alert.message}
-                    </Typography>
-                  </Box>
+                  <AlertItem key={index} type={alert.type} message={alert.message} color={alert.color} />
                 ))}
               </Box>
             </Box>
 
             {/* Triage Timeline Section */}
-            <Box sx={{ 
-              backgroundColor: 'white', 
-              borderRadius: 3, 
-              p: 4,
-              boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#111827', mb: 4 }}>
+            <Box
+              sx={{
+                backgroundColor: 'white',
+                borderRadius: 3,
+                p: 4,
+                boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+                mt: 4,
+              }}
+            >
+              <Typography variant="h5" sx={{ fontWeight: 600, color: COLORS.textPrimary, mb: 4 }}>
                 Triage Timeline
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -303,49 +427,91 @@ const PatientDetailsPage = () => {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       p: 3,
-                      border: '1px solid #E5E7EB',
+                      border: `1px solid ${COLORS.border}`,
                       borderRadius: 2,
                       cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: '#F9FAFB'
-                      }
+                      '&:hover': { backgroundColor: COLORS.background },
                     }}
                     onClick={() => toggleSection(item.label.toLowerCase().replace(' ', ''))}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <Box sx={{ 
-                        width: 24, 
-                        height: 24, 
-                        backgroundColor: item.completed ? '#10B981' : '#E5E7EB',
-                        borderRadius: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          backgroundColor: item.completed ? '#10B981' : COLORS.border,
+                          borderRadius: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
                         {item.completed && <CheckCircleIcon sx={{ fontSize: 16, color: 'white' }} />}
                       </Box>
                       <Box>
-                        <Typography variant="body1" sx={{ fontWeight: 500, color: '#111827' }}>
+                        <Typography variant="body1" sx={{ fontWeight: 500, color: COLORS.textPrimary }}>
                           {item.label}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#6B7280' }}>
-                          {item.date}
+                        <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
+                          {item.date ? new Date(item.date).toLocaleString() : 'Pending'}
                         </Typography>
                       </Box>
                     </Box>
-                    {expandedSections[item.label.toLowerCase().replace(' ', '')] ? 
-                      <ExpandLessIcon sx={{ color: '#6B7280' }} /> : 
-                      <ExpandMoreIcon sx={{ color: '#6B7280' }} />
-                    }
+                    {expandedSections[item.label.toLowerCase().replace(' ', '')] ? (
+                      <ExpandLessIcon sx={{ color: COLORS.textSecondary }} />
+                    ) : (
+                      <ExpandMoreIcon sx={{ color: COLORS.textSecondary }} />
+                    )}
                   </Box>
                 ))}
               </Box>
             </Box>
           </Grid>
         </Grid>
-      </Container>
+      </div>
     </Box>
   );
+};
+
+// PropTypes for type checking
+PatientDetailsPage.propTypes = {
+  patient: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
+    status: PropTypes.oneOfType([PropTypes.string, PropTypes.arrayOf(PropTypes.string)]).isRequired,
+    priority: PropTypes.string,
+    referral_date: PropTypes.string,
+    partner: PropTypes.bool,
+    contact_info: PropTypes.shape({
+      phone: PropTypes.string,
+      email: PropTypes.string,
+    }),
+    answers: PropTypes.shape({
+      age: PropTypes.string,
+      referring: PropTypes.string,
+      referral_reason: PropTypes.string,
+      partner_name: PropTypes.string,
+      note: PropTypes.string,
+      note_title: PropTypes.string,
+      files: PropTypes.object,
+    }),
+  }),
+};
+
+PatientDetail.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+};
+
+FileItem.propTypes = {
+  url: PropTypes.string.isRequired,
+  date: PropTypes.string,
+};
+
+AlertItem.propTypes = {
+  type: PropTypes.oneOf(['info', 'error', 'warning']).isRequired,
+  message: PropTypes.string.isRequired,
+  color: PropTypes.string.isRequired,
 };
 
 export default PatientDetailsPage;
