@@ -4,7 +4,7 @@ const Deactivate = ({ isOpen, onClose, onConfirm, user, isLoading }) => {
   if (!isOpen) return null;
 
   const handleOverlayClick = (e) => {
-    // close only if clicking the overlay and not loading
+    
     if (e.target === e.currentTarget && !isLoading) onClose && onClose();
   };
 

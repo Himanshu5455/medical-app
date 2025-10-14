@@ -32,7 +32,6 @@ const FileUploadBox = ({ patient, onUploadSuccess }) => {
     const file = e.target.files[0]; 
     if (!file) return;
 
-    // Optimistic preview so UI updates immediately
     const tempKey = `temp_${Date.now()}`;
     const tempUrl = URL.createObjectURL(file);
     onUploadSuccess?.({ [tempKey]: tempUrl });
@@ -43,17 +42,14 @@ const FileUploadBox = ({ patient, onUploadSuccess }) => {
 
       const response = await patchCustomerFiles(patient.id, formData);
 
-      // Our http wrapper returns response.data directly
-      // Try common shapes: { files }, { answers: { files } }, array
+
       const filesFromResp =
         response?.answers?.files || response?.files || response;
       const normalized = normalizeFiles(filesFromResp);
 
-      // Replace temp key with real response list by sending normalized set
       onUploadSuccess?.(normalized);
 
       if (response?.message) {
-        // Non-blocking toast via alert for now (consistent with existing code)
         alert(response.message);
       }
       console.log("Upload response:", response);
@@ -61,7 +57,7 @@ const FileUploadBox = ({ patient, onUploadSuccess }) => {
       console.error("Error uploading file:", error);
       alert(error.response?.data?.message || "Upload failed!");
     } finally {
-      // Allow selecting the same file again
+      
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };

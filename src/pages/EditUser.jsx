@@ -44,12 +44,12 @@ const EditUser = ({ isOpen, onClose, user, onUpdate }) => {
         last_name: form.last_name,
         role: form.role,
         username: form.username,
-        // backend expects the password field present; send empty string when not changing
+        
         password: form.password || "",
       });
 
-      onUpdate(updatedUser); // ✅ Tell parent to update table
-      onClose(); // Close modal
+      onUpdate(updatedUser); 
+      onClose(); 
     } catch (error) {
       alert(error.message || "Update failed");
     }
