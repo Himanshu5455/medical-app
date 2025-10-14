@@ -121,7 +121,7 @@ const UserManagement = () => {
         />
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto min-h-[300px]">
         <table className="w-full table-auto border-collapse min-w-[600px] md:min-w-full">
           <thead>
             <tr className="text-left border-b border-gray-200">
@@ -169,7 +169,7 @@ const UserManagement = () => {
                       className="cursor-pointer"
                     />
                     {openUserId === user.id && (
-                      <div className="absolute top-8 right-6 mt-2 w-36 bg-white shadow-lg rounded-lg z-10 border border-gray-200">
+                      <div className="absolute top-8 right-6 mt-2 w-36 bg-white shadow-lg rounded-lg !z-10 border border-gray-200">
                         <div className="flex flex-col gap-2 p-2">
                           <button className="text-sm text-gray-700 hover:underline text-left"
                             onClick={() => {

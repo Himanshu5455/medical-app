@@ -71,7 +71,7 @@ const FileUploadBox = ({ patient, onUploadSuccess }) => {
       sx={{
         border: "2px dashed #D1D5DB",
         borderRadius: 2,
-        p: 4,
+        p: 2,
         textAlign: "center",
         backgroundColor: "#FAFAFA",
         height: "100%",
