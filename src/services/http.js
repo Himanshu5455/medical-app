@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 const http = axios.create({
@@ -18,7 +19,7 @@ http.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
     const data = error.response?.data; 
-    const detail = data?.message || data?.error || error.message;
+    const detail = data?.detail|| data?.message || data?.error || error.message;
     const err = new Error(detail || 'Request failed');
     err.status = status;
     err.data = data;

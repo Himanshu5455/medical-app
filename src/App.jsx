@@ -1,51 +1,82 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store/store';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import Navbar from './components/layout/Navbar';
-import TriageManagement from './pages/TriageManagement';
-import PatientDetailsPage from './pages/PatientDetailsPage';
-import ChatbotQuestionnaire from './pages/ChatbotQuestionnaire';
-import LoginPage from './pages/LoginPage';
 
-import SettingsPage from './pages/SettingsPage';
+import React, { Suspense, lazy } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store/store";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+
+// Route-level code splitting
+const Navbar = lazy(() => import("./components/layout/Navbar"));
+const TriageManagement = lazy(() => import("./pages/TriageManagement"));
+const PatientDetailsPage = lazy(() => import("./pages/PatientDetailsPage"));
+const ChatbotQuestionnaire = lazy(() => import("./pages/ChatbotQuestionnaire"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 const theme = createTheme({
   palette: {
-    mode: 'light',
+    mode: "light",
     primary: {
-      main: '#125A67',
+      main: "#125A67",
     },
     secondary: {
-      main: '#dc004e',
+      main: "#dc004e",
     },
     background: {
-      default: '#f4f6f8',
+      default: "#f4f6f8",
     },
   },
   typography: {
-    fontFamily: 'Inter, Roboto, Arial, sans-serif',
+    fontFamily: "Inter, Roboto, Arial, sans-serif",
   },
 });
+
+// Hoisted style to avoid re-creation on each render
+const appContainerStyle = { backgroundColor: "#f8f9fa", minHeight: "100vh" };
+
+function MainLayout() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+}
 
 function App() {
   return (
     <Provider store={store}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+        <div style={appContainerStyle}>
           <Router>
-            <Routes>
-              <Route path="/" element={<ChatbotQuestionnaire />} />
-              <Route path="/admin/dashboard" element={<><Navbar /><TriageManagement /></>} />
-              <Route path="/admin/patient-detail/:id" element={<><Navbar /><PatientDetailsPage /></>} />
-              <Route path="/patient-details/:id" element={<><Navbar /><PatientDetailsPage /></>} />
-              <Route path="/admin/login" element={<><Navbar /><LoginPage /></>} />
-               
-                 <Route path="/settings" element={<><Navbar /><SettingsPage /></> } />
-
-            </Routes>
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/" element={<ChatbotQuestionnaire />} />
+                <Route path="/admin/login" element={<LoginPage />} />
+                <Route element={<MainLayout />}>
+                  <Route
+                    path="/admin/dashboard"
+                    element={<TriageManagement />}
+                  />
+                  <Route
+                    path="/admin/patient-detail/:id"
+                    element={<PatientDetailsPage />}
+                  />
+                  <Route
+                    path="/patient-details/:id"
+                    element={<PatientDetailsPage />}
+                  />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Route>
+              </Routes>
+            </Suspense>
           </Router>
         </div>
       </ThemeProvider>
