@@ -22,7 +22,7 @@ const ProgressBar = ({ breakdown }) => {
   };
 
   return (
-    <Box className="flex w-full h-4 rounded-full overflow-hidden shadow-sm gap-[2px]">
+    <Box className="flex w-full h-3 rounded-full overflow-hidden shadow-sm gap-[2px]">
       {breakdown.map((s, index) => (
         <div
           key={s.label}

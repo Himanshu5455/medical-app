@@ -547,52 +547,102 @@ const PatientDetailsModal = ({ open, onClose, patient, position }) => {
 };
 
 // Component to render a file upload item
+// const FileItem = ({ url, date }) => (
+//   <Box
+//     sx={{
+//       border: `1px solid ${COLORS.border}`,
+//       borderRadius: 2,
+//       p: 2,
+//       backgroundColor: COLORS.background,
+//       textAlign: "center",
+//     }}
+//   >
+//     <Box
+//       sx={{
+//         width: 50,
+//         height: 50,
+//         backgroundColor: COLORS.error,
+//         borderRadius: 2,
+//         display: "flex",
+//         alignItems: "center",
+//         justifyContent: "center",
+//         mx: "auto",
+//         mb: 2,
+//       }}
+//     >
+//       <Typography variant="h6" sx={{ color: "white", fontWeight: 600 }}>
+//         PDF
+//       </Typography>
+//     </Box>
+//     <Typography
+//       variant="body1"
+//       sx={{
+//         color: "#111827",
+//         mb: 1,
+//         fontWeight: 500,
+//         wordBreak: "break-word",
+//         maxWidth: "150px",
+//         overflow: "hidden",
+//         textOverflow: "ellipsis",
+//         whiteSpace: "nowrap",
+//       }}
+//     >
+//       {url.split("/").pop()}
+//     </Typography>
+//     <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
+//       {date ? new Date(date).toLocaleString() : "N/A"}
+//     </Typography>
+//   </Box>
+// );
+
 const FileItem = ({ url, date }) => (
-  <Box
-    sx={{
-      border: `1px solid ${COLORS.border}`,
-      borderRadius: 2,
-      p: 2,
-      backgroundColor: COLORS.background,
-      textAlign: "center",
-    }}
-  >
+  <Grid item xs={12} sm={6} md={4}>
     <Box
       sx={{
-        width: 50,
-        height: 50,
-        backgroundColor: COLORS.error,
+        border: `1px solid ${COLORS.border}`,
         borderRadius: 2,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        mx: "auto",
-        mb: 2,
+        p: 3,
+        backgroundColor: COLORS.background,
+        textAlign: "center",
       }}
     >
-      <Typography variant="h6" sx={{ color: "white", fontWeight: 600 }}>
-        PDF
+      <Box
+        sx={{
+          width: 60,
+          height: 60,
+          backgroundColor: COLORS.error,
+          borderRadius: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          mx: "auto",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: "white", fontWeight: 600 }}>
+          PDF
+        </Typography>
+      </Box>
+      <Typography
+        variant="body1"
+        sx={{
+          color: COLORS.textPrimary,
+          mb: 1,
+          fontWeight: 500,
+          wordBreak: "break-word",
+          maxWidth: "150px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {url.split("/").pop()}
+      </Typography>
+      <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
+        {date ? new Date(date).toLocaleString() : "N/A"}
       </Typography>
     </Box>
-    <Typography
-      variant="body1"
-      sx={{
-        color: "#111827",
-        mb: 1,
-        fontWeight: 500,
-        wordBreak: "break-word",
-        maxWidth: "150px",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {url.split("/").pop()}
-    </Typography>
-    <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
-      {date ? new Date(date).toLocaleString() : "N/A"}
-    </Typography>
-  </Box>
+  </Grid>
 );
 
 PatientDetailsModal.propTypes = {

@@ -10,6 +10,7 @@ const TriageOverview = ({ patients = [] }) => {
   const statusGroups = [
     { label: 'Awaiting Review', value: patients.filter(p => p.status === 'Awaiting Review').length },
     { label: 'Pending', value: patients.filter(p => p.status === 'Pending').length },
+        { label: 'Urgent', value: patients.filter(p => p.status === 'Urgent').length }, 
     { label: 'Complete', value: patients.filter(p => p.status === 'Complete').length },
     { label: 'Rejected', value: patients.filter(p => p.status === 'Rejected').length },
   ];

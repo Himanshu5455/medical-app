@@ -126,7 +126,7 @@ const PatientList = ({ patients = [], ageOptions = [] }) => {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap lg:flex-nowrap gap-3 mb-6">
         <SearchBar
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
