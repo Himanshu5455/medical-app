@@ -14,28 +14,28 @@ const PersonalInfoCard = ({ user, form, onChange, onSave, onCancel, saving = fal
     };
 
     return (
-        <div className="bg-white rounded-xl shadow p-6 border border-gray-300">
-            <div className="font mb-4 border-b border-gray-300 pb-2">
+        <div className="bg-white rounded-lg shadow border border-gray-100">
+            <div className="font border-b border-gray-200 p-4">
                 Personal Information
             </div>
 
             {!isEditing ? (
-                <div>
+                <div className="p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">First Name</div>
+                            <div className="text-gray-500  mb-3">First Name</div>
                             <p>{user.firstName}</p>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">Last Name</div>
+                            <div className="text-gray-500 mb-3">Last Name</div>
                             <p>{user.lastName}</p>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">Role</div>
+                            <div className="text-gray-500 mb-3">Role</div>
                             <p>{user.role}</p>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">Email Address</div>
+                            <div className="text-gray-500 mb-3">Email Address</div>
                             <p>{user.email}</p>
                         </div>
                     </div>
@@ -51,37 +51,37 @@ const PersonalInfoCard = ({ user, form, onChange, onSave, onCancel, saving = fal
                 </div>
             ) : (
                 /* Edit Mode */
-                <div>
+                <div className="p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">First Name</div>
+                            <div className="text-gray-500  mb-3">First Name</div>
                             <input
                                 type="text"
                                 name="firstName"
                                 value={form.firstName}
                                 onChange={onChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm 
+                                className="w-full border border-gray-300 rounded px-3 py-2  
                   focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">Last Name</div>
+                            <div className="text-gray-500  mb-3">Last Name</div>
                             <input
                                 type="text"
                                 name="lastName"
                                 value={form.lastName}
                                 onChange={onChange}
-                                className="w-full border border-gray-300 rounded px-3 py-2 text-sm 
+                                className="w-full border border-gray-300 rounded px-3 py-2  
                   focus:outline-none focus:ring-2 focus:ring-teal-500"
                             />
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">Role</div>
-                            <p className="text-sm text-gray-700">{user.role}</p>
+                            <div className="text-gray-500  mb-3">Role</div>
+                            <p className=" text-gray-700">{user.role}</p>
                         </div>
                         <div>
-                            <div className="text-gray-500 text-xs mb-3">Email Address</div>
-                            <p className="text-sm text-gray-700">{user.email}</p>
+                            <div className="text-gray-500  mb-3">Email Address</div>
+                            <p className=" text-gray-700">{user.email}</p>
                         </div>
                     </div>
 

@@ -88,13 +88,11 @@ const SettingsPage = () => {
     try {
       setUploading(true);
       const result = await uploadAvatar(file);
-
-      // Assuming backend returns { image: "https://..." }
       if (result?.image) {
         setUser((prev) => ({ ...prev, avatar: result.image }));
       }
     } catch (err) {
-      console.error("Upload failed", err);
+      console.error("Upload failed", err); 
     } finally {
       setUploading(false);
     }
@@ -102,26 +100,12 @@ const SettingsPage = () => {
 
   return (
     <div className="p-4 md:p-8 min-h-screen max-w-[1140px] mx-auto">
-      <h2 className="text-2xl font-semibold mb-6">Settings</h2>
-      <div className="flex flex-col md:flex-row gap-4">
+      <h2 className="text-2xl font-semibold p-4">Settings</h2>
+      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-lg">
         {/* Sidebar */}
-        <div className="w-full md:w-1/4 border border-gray-300 rounded-xl">
-          <div className="bg-white rounded-xl shadow p-6">
-            {/* Avatar */}
-            {/* <div className="relative flex flex-col items-center mb-6">
-              <span className="absolute right-0 -top-[6px] bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded">
-                {user.role}
-              </span>
-              <div className="relative w-24 h-24 mb-3">
-                <img
-                  src={user.avatar || "https://placehold.co/96x96?text=User"}
-                  alt=""
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              </div>
-              <div className="font-semibold">{user.firstName + " " + user.lastName}</div>
-              <div className="text-sm text-gray-500 mt-1">{user.role}</div>
-            </div> */}
+        <div className="w-full md:w-1/4 border border-gray-200 rounded-lg">
+          <div className="bg-white rounded-lg shadow p-6">
+
             <div className="relative flex flex-col items-center mb-6">
               <span className="absolute right-0 -top-[6px] bg-red-100 text-red-500 text-xs px-2 py-0.5 rounded">
                 {user.role}
