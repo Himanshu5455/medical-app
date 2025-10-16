@@ -99,7 +99,7 @@ const TriageManagement = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 container mx-auto px-4 py-6">
-        <h1 className="text-4xl font-bold mb-6 text-gray-800">Patient Triage Management</h1>
+        <h1 className="text-4xl font-bold mb-6 text-gray-800 px-2 py-2">Patient Triage Management</h1>
         <TriageOverview patients={patientsList} />
         <PatientList patients={patientsList} ageOptions={ageOptions} />
       </main>

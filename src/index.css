@@ -3,3 +3,8 @@
 h1, h2, h3, p {
   @apply font-sans;
 }
+.container {
+    @media (width >= 80rem) {
+        max-width: 75rem !important;
+    }
+}

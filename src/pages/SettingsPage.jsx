@@ -181,7 +181,8 @@ const SettingsPage = () => {
         {/* Main Content */}
         <div className="w-full md:w-3/4">
           {loading && <div className="mb-3 text-sm text-gray-500">Loading profile...</div>}
-          {error && <div className="mb-3 text-sm text-red-600">{error}</div>}
+          {/* {error && <div className="mb-3 text-sm text-red-600">{error}</div>} */}
+          {error && alert(`Error: ${error}`)}
           {activeTab === "account" && (
 
 
