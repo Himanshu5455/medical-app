@@ -72,11 +72,20 @@ const FileItem = ({ url, date }) => (
           PDF
         </Typography>
       </Box>
-      <Typography
+ <Typography
         variant="body1"
-        sx={{ color: COLORS.textPrimary, mb: 1, fontWeight: 500, wordBreak: 'break-word' }}
+        sx={{
+          color: COLORS.textPrimary,
+          mb: 1,
+          fontWeight: 500,
+          wordBreak: "break-word",
+          maxWidth: "150px",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
       >
-        {url.split('/').pop()}
+        {url.split("/").pop()}
       </Typography>
       <Typography variant="body2" sx={{ color: COLORS.textSecondary }}>
         {date ? new Date(date).toLocaleString() : 'N/A'}
@@ -100,12 +109,66 @@ const PatientDetailsPage = () => {
     triageComplete: false,
   });
 
+
+
   // Hardcoded alerts (restored as per request)
-  const alerts = [
-    { type: 'info', message: 'New notes', color: '#E3F2FD' },
-    { type: 'error', message: 'High risk detected', color: '#FFEBEE' },
-    { type: 'warning', message: 'Incomplete Information', color: '#FFF8E1' },
-  ];
+  // const alerts = [
+  //   { type: 'info', message: 'New notes', color: '#E3F2FD' },
+  //   {
+  //   type: 'error',
+  //   message: patient?.priority
+  //     ? `${patient.priority}`
+  //     : 'Priority information not available',
+  //   color: '#FFEBEE',
+  // },
+  //   { type: 'warning', message: 'Incomplete Information', color: '#FFF8E1' },
+  // ];
+
+
+const alerts = [
+  { type: 'info', message: 'New notes', color: '#E3F2FD' },
+  {
+    type: 'error',
+    message: patient?.priority
+      ? `Priority: ${patient.priority}`
+      : 'Priority information not available',
+    color:
+      patient?.priority === 'High'
+        ? '#FFEBEE'
+        : patient?.priority === 'Medium'
+        ? '#FFF8E1'
+        : patient?.priority === 'Low'
+        ? '#E8F5E9'
+        : '#E0E0E0',
+  },
+  {
+    type: 'warning',
+    message: (() => {
+      if (!patient) return 'Patient data not loaded yet';
+
+      const details = [
+        { label: 'Age', value: patient?.answers?.age },
+        { label: 'Contact', value: patient?.contact_info?.phone },
+        { label: 'Email', value: patient?.contact_info?.email },
+        { label: 'Referrer', value: patient?.answers?.referring },
+        { label: 'Referral reason', value: patient?.answers?.referral_reason },
+        { label: 'Partner', value: patient?.partner ? 'Yes' : 'No' },
+        { label: 'Partner Name', value: patient?.answers?.partner_name },
+        { label: 'Priority', value: patient?.priority },
+      ];
+
+      const missing = details
+        .filter((d) => !d.value || d.value === 'N/A')
+        .map((d) => d.label);
+
+      return missing.length > 0
+        ? `Incomplete Information: ${missing.join(', ')}`
+        : 'All required information is complete';
+    })(),
+    color: '#FFF8E1',
+  },
+];
+
 
   // Fetch patient data
   useEffect(() => {
@@ -176,15 +239,18 @@ const PatientDetailsPage = () => {
   }
 
   // Patient details data
-  const patientDetails = [
-    { label: 'Age', value: patient.answers?.age },
-    { label: 'Contact', value: patient.contact_info?.phone },
-    { label: 'Email', value: patient.contact_info?.email },
-    { label: 'Referrer', value: patient.answers?.referring },
-    { label: 'Referral reason', value: patient.answers?.referral_reason },
-    { label: 'Partner', value: patient.partner ? 'Yes' : 'No' },
-    { label: 'Partner Name', value: patient.answers?.partner_name },
-    { label: 'Priority', value: patient.priority },
+ const patientDetails = [
+    { label: "Age", value: patient.answers?.age },
+    { label: "Contact", value: patient.contact_info?.phone },
+    { label: "Email", value: patient.contact_info?.email },
+    { label: "Referrer", value: patient.answers?.referring },
+    { label: "Referral reason", value: patient.answers?.referral_reason },
+    { label: "Partner", value: patient.partner ? "Yes" : "No" },
+    {
+      label: "Partner Name",
+      value: patient.partner ? patient.answers?.partner_name || "No" : "No",
+    },
+    { label: "Priority", value: patient.priority },
   ];
 
   // Timeline items (partially derived from patient data)
