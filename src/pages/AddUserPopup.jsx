@@ -43,7 +43,7 @@ const AddUserPopup = ({ isOpen, onClose, onAdd }) => {
       onAdd(newUser); 
       onClose(); 
 
-      // Reset form
+      // Reset form           
       setForm({
         firstName: "",
         lastName: "",
@@ -59,7 +59,7 @@ const AddUserPopup = ({ isOpen, onClose, onAdd }) => {
       setLoading(false);
     }
   };
-
+ 
   if (!isOpen) return null;
 
   return (
