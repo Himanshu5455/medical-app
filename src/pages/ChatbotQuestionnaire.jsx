@@ -22,6 +22,11 @@ import { QUESTIONS } from "../data/questions";
 import { registerCustomer, serializeCustomerPayload } from "../services/api";
 import { withTyping, formatUserAnswer } from "../utils/chatHelpers";
 import { buildSummary, mergeWithStoredAnswers } from "../utils/summary";
+import {
+  cacheFiles,
+  getFilesFromMeta,
+  clearFileCache,
+} from "../utils/fileStore";
 
 const ChatbotQuestionnaire = () => {
   // Track if welcome message streaming is done
@@ -87,6 +92,9 @@ const ChatbotQuestionnaire = () => {
   const handleStartNewChat = () => {
     dispatch(resetQuestionnaire());
     localStorage.removeItem("questionnaire");
+    try {
+      clearFileCache();
+    } catch {}
     initializedRef.current = false;
     setIsAwaitingConfirmation(false);
     setWelcomeStreamed(false);
@@ -188,6 +196,23 @@ const ChatbotQuestionnaire = () => {
       if (!Number.isNaN(num)) {
         const clamped = Math.max(1, Math.min(5, num));
         normalizedValue = clamped;
+      }
+    }
+    if (question.type === "file" && Array.isArray(value)) {
+      const containsFiles = value.some(
+        (v) => v instanceof File || v instanceof Blob
+      );
+      if (containsFiles) {
+        try {
+          normalizedValue = cacheFiles(value); // store only serializable metadata in Redux
+        } catch {
+          normalizedValue = value.map((f) => ({
+            name: f?.name,
+            size: f?.size,
+          }));
+        }
+      } else {
+        normalizedValue = value; // already metadata
       }
     }
 
@@ -361,7 +386,14 @@ const ChatbotQuestionnaire = () => {
         setIsStreamingActive(true);
         (async () => {
           try {
-            const payload = serializeCustomerPayload({ ...answers });
+            const hydratedFiles = getFilesFromMeta(answers?.files);
+            const payload = serializeCustomerPayload({
+              ...answers,
+              files:
+                hydratedFiles && hydratedFiles.length > 0
+                  ? hydratedFiles
+                  : undefined,
+            });
             await registerCustomer(payload);
             dispatch(
               addToChatHistory({
