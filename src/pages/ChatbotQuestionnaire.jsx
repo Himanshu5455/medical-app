@@ -14,7 +14,6 @@ import {
   addToChatHistory,
   nextQuestion,
   completeQuestionnaire,
-  loadFromStorage,
   resetQuestionnaire,
   setCurrentQuestion,
 } from "../store/questionnaireSlice";
@@ -29,7 +28,6 @@ import {
 } from "../utils/fileStore";
 
 const ChatbotQuestionnaire = () => {
-  // Track if welcome message streaming is done
   const [welcomeStreamed, setWelcomeStreamed] = useState(false);
   const dispatch = useDispatch();
   const theme = useTheme();
@@ -44,20 +42,15 @@ const ChatbotQuestionnaire = () => {
   const visibleQuestions = getVisibleQuestions(answers);
   const currentQuestion = visibleQuestions[currentQuestionIndex];
 
-  // Track streaming state to disable input during streaming
   const [isStreamingActive, setIsStreamingActive] = useState(false);
-  // When true, hide input while waiting for user confirmation after summary
   const [isAwaitingConfirmation, setIsAwaitingConfirmation] = useState(false);
-  // If true, after editing a field jump back to summary instead of continuing
   const [isReturnToSummary, setIsReturnToSummary] = useState(false);
 
   // Handler for when streaming completes
   const handleStreamingComplete = () => {
     setIsStreamingActive(false);
-    // If the last message is the welcome message and not yet streamed, show first question
     if (!welcomeStreamed && chatHistory.length > 0) {
       const lastMsg = chatHistory[chatHistory.length - 1];
-      // Only dispatch first question if chatHistory contains only the welcome message
       if (lastMsg.questionId === "welcome" && chatHistory.length === 1) {
         setWelcomeStreamed(true);
         setIsStreamingActive(true);
@@ -122,47 +115,28 @@ const ChatbotQuestionnaire = () => {
     }
   }, [chatHistory]);
 
-  // Load from localStorage and initialize (only once)
+  // Always initialize a fresh chat on first mount
   useEffect(() => {
     if (initializedRef.current) return;
-
-    // Clear localStorage for fresh start (temporary for debugging)
-    // localStorage.removeItem('questionnaire'); // Uncomment this line to reset
-
-    const savedData = localStorage.getItem("questionnaire");
-    let hasHistory = false;
-
-    if (savedData) {
-      try {
-        const parsed = JSON.parse(savedData);
-        dispatch(loadFromStorage(parsed));
-        if (parsed.chatHistory && parsed.chatHistory.length > 0) {
-          hasHistory = true;
-        }
-      } catch (error) {
-        console.error("Error loading saved questionnaire data:", error);
-      }
-    }
-
-    // If no chat history, start with only the welcome message
-    if (!hasHistory && QUESTIONS.length > 0) {
-      setWelcomeStreamed(false);
-      setIsStreamingActive(true);
-      dispatch(
-        addToChatHistory({
-          type: "bot",
-          message:
-            "Hello! I'm Maya, your medical triage assistant. I'll help you by asking a few questions to understand your situation better.",
-          timestamp: new Date().toISOString(),
-          questionId: "welcome",
-          shouldStream: true,
-        })
-      );
-      // First question will be sent after welcome streaming completes
-    }
-
+    try {
+      localStorage.removeItem("questionnaire");
+      clearFileCache();
+    } catch {}
+    dispatch(resetQuestionnaire());
+    setWelcomeStreamed(false);
+    setIsStreamingActive(true);
+    dispatch(
+      addToChatHistory({
+        type: "bot",
+        message:
+          "Hello! I'm Maya, your medical triage assistant. I'll help you by asking a few questions to understand your situation better.",
+        timestamp: new Date().toISOString(),
+        questionId: "welcome",
+        shouldStream: true,
+      })
+    );
     initializedRef.current = true;
-  }, []); // Empty dependency array to run only once
+  }, []);
 
   // Save to localStorage whenever state changes
   useEffect(() => {
