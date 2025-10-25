@@ -66,18 +66,20 @@ const ChatMessage = ({ message, onOptionClick, onStreamingComplete }) => {
                   onComplete={handleStreamComplete}
                   speed={10}
                   sx={{ 
-                    lineHeight: 1.5,
+                    lineHeight: 1.8,
                     fontSize: { xs: '0.875rem', sm: '1rem' },
-                    whiteSpace: 'pre-line'
+                    whiteSpace: 'pre-wrap',
+                    display: 'block'
                   }}
                 />
               ) : (
                 <Typography 
                   variant="body2" 
                   sx={{ 
-                    lineHeight: 1.5,
+                    lineHeight: 1.8,
                     fontSize: { xs: '0.875rem', sm: '1rem' },
-                    whiteSpace: 'pre-line'
+                    whiteSpace: 'pre-wrap',
+                    display: 'block'
                   }}
                 >
                   {message.message}

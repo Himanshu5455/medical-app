@@ -52,6 +52,7 @@ const AddUserPopup = ({ isOpen, onClose, onAdd }) => {
         password: "",
         confirmPassword: "",
       });
+      // window.location.reload();
     } catch (err) {
       console.error(err);
       alert(err.message || "Failed to add user");

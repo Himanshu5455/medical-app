@@ -7,6 +7,14 @@ export const QUESTIONS = [
     required: true,
     validation: (value) => value.trim().length >= 2 ? null : "Please enter your full name"
   },
+   {
+    id: 'phone',
+    type: 'tel',
+    question: "What's the best phone number to reach you?",
+    placeholder: "Enter your phone number",
+    required: true,
+    validation: (value) => value.replace(/\D/g, '').length >= 10 ? null : "Please enter a valid phone number"
+  },
   {
     id: 'email',
     type: 'email',
@@ -18,14 +26,7 @@ export const QUESTIONS = [
       return emailRegex.test(value) ? null : "Please enter a valid email address";
     }
   },
-  {
-    id: 'phone',
-    type: 'tel',
-    question: "What's the best phone number to reach you?",
-    placeholder: "Enter your phone number",
-    required: true,
-    validation: (value) => value.replace(/\D/g, '').length >= 10 ? null : "Please enter a valid phone number"
-  },
+ 
   {
     id: 'referral_reason',
     type: 'select',

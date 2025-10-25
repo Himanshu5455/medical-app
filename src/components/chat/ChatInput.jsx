@@ -180,20 +180,7 @@ const renderInput = () => {
             px: { xs: 1, sm: 2 },
           }}
         >
-          {/* <IconButton
-            sx={{
-              color: "#125A67",
-              width: 40,
-              height: 40,
-              flexShrink: 0,
-              "&:hover": {
-                bgcolor: "rgba(18, 90, 103, 0.08)",
-                color: "#0d434c",
-              },
-            }}
-          >
-            <AddIcon fontSize="medium" />
-          </IconButton> */}
+
           <TextField
             fullWidth
             variant="outlined"
