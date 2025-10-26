@@ -198,6 +198,25 @@ const ChatbotQuestionnaire = () => {
       })
     );
 
+    // Handle consent response
+    if (question.id === 'consent_info' && normalizedValue === false) {
+      // User declined consent - show admin contact message and complete questionnaire
+      withTyping(dispatch, 1500, () => {
+        setIsStreamingActive(true);
+        dispatch(
+          addToChatHistory({
+            type: "bot",
+            message: "No problem! Our admin team will contact you directly to discuss your needs and provide assistance.",
+            timestamp: new Date().toISOString(),
+            questionId: "consent-declined",
+            shouldStream: true,
+          })
+        );
+        dispatch(completeQuestionnaire());
+      });
+      return;
+    }
+
     // If we are editing from summary, regenerate summary immediately and skip normal progression
     if (isReturnToSummary) {
       withTyping(dispatch, 800, () => {
@@ -239,6 +258,12 @@ const ChatbotQuestionnaire = () => {
         setIsStreamingActive(true);
 
         let botMessage = nextQ.question;
+        
+        // Handle dynamic questions that depend on answers
+        if (typeof nextQ.question === 'function') {
+          botMessage = nextQ.question(effectiveAnswers);
+        }
+        
         if (nextQ.id === "exams_to_share") {
           botMessage = "Do you have any exams to share with us?";
         }

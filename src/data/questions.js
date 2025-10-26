@@ -15,6 +15,21 @@ export const QUESTIONS = [
     required: true,
     validation: (value) => value.replace(/\D/g, '').length >= 10 ? null : "Please enter a valid phone number"
   },
+ {
+    id: 'consent_info',
+    type: 'boolean',
+    question: (answers) => `Thank you very much, ${answers.name || 'there'}!
+
+Before we move on to the next steps, I would like to know if you consent to sharing your personal information.
+
+Your data is 100% secure with us and will only be used to provide you the best support, okay?`,
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' }
+    ],
+    required: true
+  },
+  
   {
     id: 'email',
     type: 'email',

@@ -69,10 +69,9 @@ const handleSubmit = (value = inputValue) => {
 
   let submitValue;
 
-
+  // Special handling for files_permission question
   if (question.id === "files_permission") {
     if (value === false) {
-      
       setError("");
       onAnswer(false);
       return; // exit early
@@ -100,6 +99,21 @@ const handleSubmit = (value = inputValue) => {
       }
     } else {
       submitValue = value || "";
+    }
+  } else if (question.type === "boolean") {
+    // Convert text input to boolean for boolean questions
+    if (typeof value === "string") {
+      const lowerValue = value.toLowerCase().trim();
+      if (lowerValue === "yes" || lowerValue === "true" || lowerValue === "y") {
+        submitValue = true;
+      } else if (lowerValue === "no" || lowerValue === "false" || lowerValue === "n") {
+        submitValue = false;
+      } else {
+        // If it's not a recognizable boolean value, treat as text
+        submitValue = value;
+      }
+    } else {
+      submitValue = value;
     }
   } else {
     submitValue = value;
@@ -239,61 +253,42 @@ case "boolean":
       <TextField
         fullWidth
         variant="outlined"
-        value={inputValue === true ? "Yes" : inputValue === false ? "No" : ""}
-        placeholder="Select Yes or No"
-        InputProps={{
-          readOnly: true,
-        }}
+        placeholder="Type your response..."
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyPress={handleKeyPress}
+        disabled={disabled}
         size="small"
         sx={{
           flex: 1,
           "& .MuiOutlinedInput-root": {
             borderRadius: 20,
             backgroundColor: "white",
+            fontSize: { xs: "0.875rem", sm: "1rem" },
           },
         }}
-        disabled={disabled}
       />
-
-      {/* Yes Button */}
-      <Button
-        variant="outlined"
-        onClick={() => {
-          if (question.id === "files_permission") {
-            handleSubmit(true); // auto-submit only for file permission
-          } else {
-            setInputValue(true);
-          }
-        }}
-        disabled={disabled}
+      <IconButton
+        onClick={() => handleSubmit()}
+        disabled={
+          disabled ||
+          (typeof inputValue === "string"
+            ? !inputValue.trim()
+            : !inputValue) ||
+          isStreamingActive
+        }
         sx={{
-          borderRadius: 20,
-          textTransform: "none",
-          minWidth: 64,
+          bgcolor: "#125A67",
+          color: "white !important",
+          width: 40,
+          height: 40,
+          flexShrink: 0,
+          "&:hover": { bgcolor: "#0d434c", color: "white !important" },
+          "&:disabled": { bgcolor: "#e0e0e0", color: "#9CA3AF" },
         }}
       >
-        Yes
-      </Button>
-
-      {/* No Button */}
-      <Button
-        variant="outlined"
-        onClick={() => {
-          if (question.id === "files_permission") {
-            handleSubmit(false); // auto-submit only here
-          } else {
-            setInputValue(false);
-          }
-        }}
-        disabled={disabled}
-        sx={{
-          borderRadius: 20,
-          textTransform: "none",
-          minWidth: 64,
-        }}
-      >
-        No
-      </Button>
+        <SendIcon sx={{ color: "white" }} />
+      </IconButton>
     </Box>
   );
 
