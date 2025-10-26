@@ -217,6 +217,36 @@ const ChatbotQuestionnaire = () => {
       return;
     }
 
+    // Handle referral response - proceed to demographics regardless of answer
+    if (question.id === 'has_referral') {
+      // Add a contextual message based on referral type (only if there is one)
+      let contextualMessage = "";
+      if (normalizedValue === 'yes_from_sprout') {
+        contextualMessage = "Great! Since you're referred from Sprout, we'll proceed with collecting your demographic information. Note that you may not necessarily have an OHIP number.";
+      } else if (normalizedValue === 'yes_i_do') {
+        contextualMessage = "Perfect! Let's collect your demographic information to get started.";
+      }
+
+      // Only add contextual message if there is one
+      if (contextualMessage) {
+        withTyping(dispatch, 1500, () => {
+          setIsStreamingActive(true);
+          dispatch(
+            addToChatHistory({
+              type: "bot",
+              message: contextualMessage,
+              timestamp: new Date().toISOString(),
+              questionId: "referral-context",
+              shouldStream: true,
+            })
+          );
+        });
+      }
+
+      // Continue with normal flow to next question (demographics_name)
+      // The normal progression logic below will handle moving to the next question
+    }
+
     // If we are editing from summary, regenerate summary immediately and skip normal progression
     if (isReturnToSummary) {
       withTyping(dispatch, 800, () => {
