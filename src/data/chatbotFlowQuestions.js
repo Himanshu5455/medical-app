@@ -100,6 +100,94 @@ Your data is 100% secure with us and will only be used to provide you the best s
     required: true,
     step: 3,
     validation: (value) => value.replace(/\D/g, '').length >= 10 ? null : "Please enter a valid phone number"
+  },
+  
+  // OHIP Number Section
+  {
+    id: 'has_ohip',
+    type: 'boolean',
+    question: `Thank you very much!
+
+Do you have a OHIP number?`,
+    options: [
+      { value: true, label: 'Yes, I do' },
+      { value: false, label: "No, I don't" }
+    ],
+    required: true,
+    step: 3
+  },
+  {
+    id: 'ohip_number',
+    type: 'text',
+    question: "Okay, please tell me your OHIP number.",
+    placeholder: "Enter your OHIP number",
+    required: true,
+    step: 3,
+    showIf: (answers) => answers.has_ohip === true
+  },
+  {
+    id: 'alternative_insurance',
+    type: 'select',
+    question: "Do you fit any of the available options below?",
+    options: [
+      { value: 'blue_cross', label: 'I am Blue Cross insured' },
+      { value: 'out_of_province', label: 'I am from out of the province' },
+      { value: 'out_of_country', label: 'I am from out of the country' }
+    ],
+    required: true,
+    step: 3,
+    showIf: (answers) => answers.has_ohip === false
+  },
+  {
+    id: 'blue_cross_id_upload',
+    type: 'boolean',
+    question: "Do you have your Blue Cross ID to be uploaded?",
+    options: [
+      { value: true, label: 'Yes, I have it' },
+      { value: false, label: "I don't have it right now" }
+    ],
+    required: true,
+    step: 3,
+    showIf: (answers) => answers.alternative_insurance === 'blue_cross'
+  },
+  {
+    id: 'blue_cross_documents',
+    type: 'file',
+    question: "Please upload your Blue Cross documents",
+    accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png",
+    multiple: true,
+    required: true,
+    step: 3,
+    showIf: (answers) => answers.alternative_insurance === 'blue_cross' && answers.blue_cross_id_upload === true
+  },
+
+  // Payment confirmation for out of province/country
+  {
+    id: 'payment_confirmation',
+    type: 'boolean',
+    question: (answers) => {
+      const location = answers.alternative_insurance === 'out_of_province' ? 'out of the province' : 'out of the country';
+      return `Please note that the consultation fee of 200 CAD will be the patient’s responsibility.`;
+    },
+    options: [
+      { value: true, label: 'Yes, proceed' },
+      { value: false, label: 'No' }
+    ],
+    required: true,
+    step: 3,
+    showIf: (answers) => answers.alternative_insurance === 'out_of_province' || answers.alternative_insurance === 'out_of_country'
+  },
+
+  // Human escalation message for payment decline
+  {
+    id: 'payment_declined_escalation',
+    type: 'message',
+    message: (answers) => `I understand, ${answers.name || 'there'}. I can refer you to one of our specialists.
+We'll transfer you to one of our specialists so we can better understand your situation.`,
+    step: 3,
+    showIf: (answers) => answers.payment_confirmation === false,
+    isEnd: true,
+    escalationType: 'human'
   }
 ];
 

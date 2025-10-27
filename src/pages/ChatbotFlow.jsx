@@ -19,10 +19,13 @@ import {
   setAnswer,
   addToChatHistory,
   nextQuestion,
-  completeQuestionnaire,
-  resetQuestionnaire,
+  completeChatFlow,
+  resetChatFlow,
   setCurrentQuestion,
-} from "../store/questionnaireSlice";
+  setStreamingActive,
+  setAwaitingConfirmation,
+  setWelcomeStreamed,
+} from "../store/chatFlowSlice";
 
 const ChatbotFlow = () => {
   const [welcomeStreamed, setWelcomeStreamed] = useState(false);
@@ -36,25 +39,44 @@ const ChatbotFlow = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const { currentQuestionIndex: reduxQuestionIndex, answers, chatHistory, isCompleted } =
-    useSelector((state) => state.questionnaire);
+    useSelector((state) => state.chatFlow);
 
   const chatContainerRef = useRef(null);
   const initializedRef = useRef(false);
 
   // Get current question - use existing questions first, then new flow
   const getCurrentQuestion = () => {
-    // If we have name but no phone, show phone question
-    if (answers.name && !answers.phone) {
-      return QUESTIONS.find(q => q.id === 'phone');
+    console.log("Getting current question with answers:", answers);
+    console.log("QUESTIONS array:", QUESTIONS);
+    console.log("CHATBOT_FLOW_STEP2_QUESTIONS array:", CHATBOT_FLOW_STEP2_QUESTIONS);
+    
+    // Safety check - ensure QUESTIONS array exists
+    if (!QUESTIONS || QUESTIONS.length === 0) {
+      console.error("QUESTIONS array is not available!");
+      return null;
     }
-    // If we have phone but no consent, show consent question
-    if (answers.phone && answers.consent_info === undefined) {
-      return QUESTIONS.find(q => q.id === 'consent_info');
+    
+    // If no name yet, show name question
+    if (!answers.name) {
+      console.log("No name, returning name question");
+      const nameQuestion = QUESTIONS.find(q => q.id === 'name');
+      console.log("Name question found:", nameQuestion);
+      return nameQuestion || QUESTIONS[0]; // Fallback to first question
     }
+    
+    // If we have name but no consent, show consent question
+    if (answers.name && (answers.consent_info === undefined || answers.consent_info === null)) {
+      console.log("Has name but no consent, returning consent question");
+      const consentQuestion = QUESTIONS.find(q => q.id === 'consent_info');
+      console.log("Consent question found:", consentQuestion);
+      return consentQuestion || QUESTIONS.find(q => q.id === 'consent_info') || QUESTIONS[1]; // Fallback
+    }
+    
     // If consent is false, we're done
     if (answers.consent_info === false) {
       return null;
     }
+    
     // If consent is true but no referral check, show referral question
     if (answers.consent_info === true && !answers.referral_check) {
       return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'referral_check');
@@ -81,14 +103,79 @@ const ChatbotFlow = () => {
           return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === questionId);
         }
       }
-      // All demographics questions answered
+      
+      // Check for OHIP questions after demographics
+      if (answers.has_ohip === undefined || answers.has_ohip === null) {
+        console.log("OHIP question not answered yet, returning has_ohip question");
+        return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'has_ohip');
+      }
+      
+      // If has OHIP, check if OHIP number is answered
+      if (answers.has_ohip === true && !answers.ohip_number) {
+        console.log("Has OHIP but no OHIP number, returning ohip_number question");
+        return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'ohip_number');
+      }
+      
+      // If no OHIP, check if alternative insurance is answered
+      if (answers.has_ohip === false && !answers.alternative_insurance) {
+        console.log("No OHIP, returning alternative_insurance question");
+        return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'alternative_insurance');
+      }
+      
+      // If alternative insurance is answered, check next steps
+      if (answers.alternative_insurance) {
+        console.log("Alternative insurance answered:", answers.alternative_insurance);
+        
+        // If Blue Cross selected, check Blue Cross questions
+        if (answers.alternative_insurance === 'blue_cross') {
+          console.log("Blue Cross selected, checking blue_cross_id_upload:", answers.blue_cross_id_upload);
+          if (answers.blue_cross_id_upload === null || answers.blue_cross_id_upload === undefined) {
+            console.log("Blue Cross selected, returning blue_cross_id_upload question");
+            return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'blue_cross_id_upload');
+          }
+          if (answers.blue_cross_id_upload === true && (!answers.blue_cross_documents || answers.blue_cross_documents.length === 0)) {
+            console.log("Blue Cross upload confirmed, returning blue_cross_documents question");
+            return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'blue_cross_documents');
+          }
+        }
+        
+        // If out of province/country selected, check payment confirmation
+        if ((answers.alternative_insurance === 'out_of_province' || answers.alternative_insurance === 'out_of_country') && (answers.payment_confirmation === null || answers.payment_confirmation === undefined)) {
+          console.log("Out of province/country selected, returning payment_confirmation question");
+          return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'payment_confirmation');
+        }
+      }
+      
+      // If we reach here but still have unanswered questions, try to find the next one
+      console.log("Reached end of demographics flow, checking for remaining questions...");
+      
+      // Check if we're missing any critical questions
+      if (!answers.has_ohip) {
+        console.log("Missing has_ohip, returning has_ohip question");
+        return CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'has_ohip');
+      }
+      
+      // All questions answered
+      console.log("All questions appear to be answered, returning null");
       return null;
     }
-    // Default to name question
-    return QUESTIONS.find(q => q.id === 'name');
+    
+    // If we reach here, all questions are answered
+    console.log("All questions answered, returning null");
+    return null;
   };
 
   const currentQuestion = getCurrentQuestion();
+  console.log("Current question result:", currentQuestion);
+  
+  // Fallback question if currentQuestion is undefined
+  const safeCurrentQuestion = currentQuestion || {
+    id: 'name',
+    type: 'text',
+    question: "Hi there! 👋 I'm here to help you get started. What's your full name?",
+    placeholder: "Enter your full name",
+    required: true
+  };
 
   // Handler for when streaming completes
   const handleStreamingComplete = () => {
@@ -124,8 +211,8 @@ const ChatbotFlow = () => {
 
   // Reset chat function
   const handleStartNewChat = () => {
-    dispatch(resetQuestionnaire());
-    localStorage.removeItem("questionnaire");
+    dispatch(resetChatFlow());
+    localStorage.removeItem("chatFlow");
     setCurrentStep(2);
     setCurrentQuestionIndex(0);
     setIsAwaitingConfirmation(false);
@@ -158,6 +245,15 @@ const ChatbotFlow = () => {
   useEffect(() => {
     if (initializedRef.current) return;
     
+    console.log("Initializing chat, current state:", { answers, chatHistory, isCompleted });
+    
+    // Check for old localStorage data that might interfere
+    const oldData = localStorage.getItem("questionnaire");
+    if (oldData) {
+      console.log("Found old questionnaire data in localStorage:", oldData);
+      localStorage.removeItem("questionnaire"); // Clean up old data
+    }
+    
     setIsStreamingActive(true);
     dispatch(
       addToChatHistory({
@@ -179,7 +275,7 @@ const ChatbotFlow = () => {
       chatHistory,
       isCompleted,
     };
-    localStorage.setItem("questionnaire", JSON.stringify(dataToSave));
+    localStorage.setItem("chatFlow", JSON.stringify(dataToSave));
   }, [currentQuestionIndex, answers, chatHistory, isCompleted]);
 
   const handleAnswer = (value) => {
@@ -204,28 +300,8 @@ const ChatbotFlow = () => {
       })
     );
 
-    // Handle name question - move to phone
+    // Handle name question - move to consent
     if (question.id === 'name') {
-      const phoneQuestion = QUESTIONS.find(q => q.id === 'phone');
-      if (phoneQuestion) {
-        withTyping(dispatch, 1500, () => {
-          setIsStreamingActive(true);
-          dispatch(
-            addToChatHistory({
-              type: "bot",
-              message: phoneQuestion.question,
-              timestamp: new Date().toISOString(),
-              questionId: phoneQuestion.id,
-              shouldStream: true,
-            })
-          );
-        });
-      }
-      return;
-    }
-
-    // Handle phone question - move to consent
-    if (question.id === 'phone') {
       const consentQuestion = QUESTIONS.find(q => q.id === 'consent_info');
       if (consentQuestion) {
         withTyping(dispatch, 1500, () => {
@@ -259,7 +335,7 @@ const ChatbotFlow = () => {
             shouldStream: true,
           })
         );
-        dispatch(completeQuestionnaire());
+        dispatch(completeChatFlow());
       });
       return;
     }
@@ -341,7 +417,134 @@ const ChatbotFlow = () => {
           });
         }
       } else {
-        // Demographics complete
+        // Demographics complete, move to OHIP questions
+        const hasOHIP = CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'has_ohip');
+        if (hasOHIP) {
+          withTyping(dispatch, 1500, () => {
+            setIsStreamingActive(true);
+            dispatch(
+              addToChatHistory({
+                type: "bot",
+                message: hasOHIP.question,
+                timestamp: new Date().toISOString(),
+                questionId: hasOHIP.id,
+                shouldStream: true,
+                showBooleanOptions: true,
+              })
+            );
+          });
+        }
+      }
+      return;
+    }
+
+    // Handle OHIP flow
+    if (question.id === 'has_ohip') {
+      if (value === true) {
+        // User has OHIP - ask for OHIP number
+        const ohipNumberQ = CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'ohip_number');
+        if (ohipNumberQ) {
+          withTyping(dispatch, 1500, () => {
+            setIsStreamingActive(true);
+            dispatch(
+              addToChatHistory({
+                type: "bot",
+                message: ohipNumberQ.question,
+                timestamp: new Date().toISOString(),
+                questionId: ohipNumberQ.id,
+                shouldStream: true,
+              })
+            );
+          });
+        }
+      } else {
+        // User doesn't have OHIP - ask for alternative insurance
+        const altInsuranceQ = CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'alternative_insurance');
+        if (altInsuranceQ) {
+          withTyping(dispatch, 1500, () => {
+            setIsStreamingActive(true);
+            dispatch(
+              addToChatHistory({
+                type: "bot",
+                message: altInsuranceQ.question,
+                timestamp: new Date().toISOString(),
+                questionId: altInsuranceQ.id,
+                shouldStream: true,
+                options: altInsuranceQ.options,
+              })
+            );
+          });
+        }
+      }
+      return;
+    }
+
+    // Handle alternative insurance selection
+    if (question.id === 'alternative_insurance') {
+      console.log('Alternative insurance selected:', value);
+      // If Blue Cross selected, ask for ID upload
+      if (value === 'blue_cross') {
+        console.log('Blue Cross selected, finding upload question...');
+        const blueCrossUpload = CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'blue_cross_id_upload');
+        console.log('Blue Cross upload question found:', blueCrossUpload);
+        if (blueCrossUpload) {
+          withTyping(dispatch, 1500, () => {
+            setIsStreamingActive(true);
+            dispatch(
+              addToChatHistory({
+                type: "bot",
+                message: blueCrossUpload.question,
+                timestamp: new Date().toISOString(),
+                questionId: blueCrossUpload.id,
+                shouldStream: true,
+                showBooleanOptions: true,
+              })
+            );
+          });
+        }
+      } else if (value === 'out_of_province' || value === 'out_of_country') {
+        // Out of province/country - ask for payment confirmation
+        const paymentConfirmation = CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'payment_confirmation');
+        if (paymentConfirmation) {
+          withTyping(dispatch, 1500, () => {
+            setIsStreamingActive(true);
+            dispatch(
+              addToChatHistory({
+                type: "bot",
+                message: paymentConfirmation.question({ ...answers, [question.id]: value }),
+                timestamp: new Date().toISOString(),
+                questionId: paymentConfirmation.id,
+                shouldStream: true,
+                showBooleanOptions: true,
+              })
+            );
+          });
+        }
+      }
+      return;
+    }
+
+    // Handle Blue Cross ID upload
+    if (question.id === 'blue_cross_id_upload') {
+      if (value === true) {
+        // User has the documents - ask for upload
+        const documentsUpload = CHATBOT_FLOW_STEP2_QUESTIONS.find(q => q.id === 'blue_cross_documents');
+        if (documentsUpload) {
+          withTyping(dispatch, 1500, () => {
+            setIsStreamingActive(true);
+            dispatch(
+              addToChatHistory({
+                type: "bot",
+                message: documentsUpload.question,
+                timestamp: new Date().toISOString(),
+                questionId: documentsUpload.id,
+                shouldStream: true,
+              })
+            );
+          });
+        }
+      } else {
+        // User doesn't have documents - complete flow
         withTyping(dispatch, 1500, () => {
           setIsStreamingActive(true);
           dispatch(
@@ -353,9 +556,82 @@ const ChatbotFlow = () => {
               shouldStream: true,
             })
           );
-          dispatch(completeQuestionnaire());
+          dispatch(completeChatFlow());
         });
       }
+      return;
+    }
+
+    // Handle Blue Cross documents upload completion
+    if (question.id === 'blue_cross_documents') {
+      withTyping(dispatch, 1500, () => {
+        setIsStreamingActive(true);
+        dispatch(
+          addToChatHistory({
+            type: "bot",
+            message: "Thank you for completing the questionnaire! 🎉 We have all the information we need.",
+            timestamp: new Date().toISOString(),
+            questionId: "completion",
+            shouldStream: true,
+          })
+        );
+        dispatch(completeChatFlow());
+      });
+      return;
+    }
+
+    // Handle payment confirmation
+    if (question.id === 'payment_confirmation') {
+      if (value === true) {
+        // User agrees to pay - proceed with consultation
+        withTyping(dispatch, 1500, () => {
+          setIsStreamingActive(true);
+          dispatch(
+            addToChatHistory({
+              type: "bot",
+              message: "Thank you for completing the questionnaire! 🎉 We have all the information we need.",
+              timestamp: new Date().toISOString(),
+              questionId: "completion",
+              shouldStream: true,
+            })
+          );
+          dispatch(completeChatFlow());
+        });
+      } else {
+        // User declines payment - escalate to human
+        withTyping(dispatch, 1500, () => {
+          setIsStreamingActive(true);
+          dispatch(
+            addToChatHistory({
+              type: "bot",
+              message: `I understand, ${answers.name || 'there'}. I can refer you to one of our specialists.
+We'll transfer you to one of our specialists so we can better understand your situation.`,
+              timestamp: new Date().toISOString(),
+              questionId: "payment-declined-escalation",
+              shouldStream: true,
+            })
+          );
+          dispatch(completeChatFlow());
+        });
+      }
+      return;
+    }
+
+    // Handle OHIP number completion
+    if (question.id === 'ohip_number') {
+      withTyping(dispatch, 1500, () => {
+        setIsStreamingActive(true);
+        dispatch(
+          addToChatHistory({
+            type: "bot",
+            message: "Thank you for completing the questionnaire! 🎉 We have all the information we need.",
+            timestamp: new Date().toISOString(),
+            questionId: "completion",
+            shouldStream: true,
+          })
+        );
+        dispatch(completeChatFlow());
+      });
       return;
     }
 
@@ -397,22 +673,23 @@ const ChatbotFlow = () => {
               shouldStream: true,
             })
           );
-          dispatch(completeQuestionnaire());
+          dispatch(completeChatFlow());
         });
       }
     }
   };
 
   const handleOptionClick = (value, label, questionId) => {
+    console.log("Option clicked:", { questionId, currentQuestionId: safeCurrentQuestion?.id, answers });
     // Only process clicks from the current active question
-    if (currentQuestion && questionId === currentQuestion.id) {
+    if (safeCurrentQuestion && questionId === safeCurrentQuestion.id) {
       handleAnswer(value);
     } else {
       console.log(
         "Ignoring click from previous question:",
         questionId,
         "Current question:",
-        currentQuestion?.id
+        safeCurrentQuestion?.id
       );
     }
   };
@@ -512,7 +789,7 @@ const ChatbotFlow = () => {
           </Box>
 
           {/* Input Area - hidden while awaiting confirmation or completed */}
-          {!isCompleted && currentQuestion && !isAwaitingConfirmation && (
+          {!isCompleted && !isAwaitingConfirmation && (
             <Box
               sx={{
                 bgcolor: "white",
@@ -528,8 +805,8 @@ const ChatbotFlow = () => {
               }}
             >
               <ChatInput
-                question={currentQuestion}
-                currentAnswer={answers[currentQuestion.id]}
+                question={safeCurrentQuestion}
+                currentAnswer={answers[safeCurrentQuestion.id] || ''}
                 onAnswer={handleAnswer}
                 isStreamingActive={isStreamingActive}
                 filesPermission={false}
