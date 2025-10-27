@@ -206,7 +206,7 @@ const ChatbotQuestionnaire = () => {
         dispatch(
           addToChatHistory({
             type: "bot",
-            message: "No problem! Our admin team will contact you directly to discuss your needs and provide assistance.",
+            message: "If you don't feel comfortable sharing your information with me, we’ll refer you to one of our specialists to get in touch with you.",
             timestamp: new Date().toISOString(),
             questionId: "consent-declined",
             shouldStream: true,
