@@ -282,17 +282,16 @@ const ChatbotFlow = () => {
     const question = currentQuestion;
     if (!question) return;
 
-    // Add user message
-    dispatch(
-      addToChatHistory({
-        type: "user",
-        message: formatUserAnswer(question, value),
-        timestamp: new Date().toISOString(),
-        questionId: question.id,
-      })
-    );
-
-    // Save answer
+      // Add user message
+      const formattedAnswer = formatUserAnswer(question, value);
+      dispatch(
+        addToChatHistory({
+          type: "user",
+          message: typeof formattedAnswer === 'object' ? JSON.stringify(formattedAnswer) : formattedAnswer,
+          timestamp: new Date().toISOString(),
+          questionId: question.id,
+        })
+      );    // Save answer
     dispatch(
       setAnswer({
         field: question.id,
@@ -564,6 +563,27 @@ const ChatbotFlow = () => {
 
     // Handle Blue Cross documents upload completion
     if (question.id === 'blue_cross_documents') {
+      // Ensure the uploaded files are properly formatted
+      const formattedFiles = Array.isArray(value) ? value.map(file => {
+        if (file instanceof File) {
+          return {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+          };
+        }
+        return file;
+      }) : [];
+
+      // Save the formatted files
+      dispatch(
+        setAnswer({
+          field: question.id,
+          value: formattedFiles
+        })
+      );
+
       withTyping(dispatch, 1500, () => {
         setIsStreamingActive(true);
         dispatch(
@@ -694,7 +714,7 @@ We'll transfer you to one of our specialists so we can better understand your si
     }
   };
 
-  // Format user answer for display
+    // Format user answer for display
   const formatUserAnswer = (question, value) => {
     if (question.type === "select" || question.type === "consent") {
       const option = question.options?.find(opt => opt.value === value);
@@ -702,6 +722,22 @@ We'll transfer you to one of our specialists so we can better understand your si
     }
     if (question.type === "boolean") {
       return value ? "Yes" : "No";
+    }
+    if (question.type === "file") {
+      if (!value) return "No files uploaded";
+      if (!Array.isArray(value)) return "File upload error";
+      return value.map(file => {
+        if (typeof file === 'string') return { name: file };
+        return {
+          name: file.name || 'Unnamed file',
+          size: file.size || 0,
+          type: file.type || 'application/octet-stream',
+          lastModified: file.lastModified
+        };
+      });
+    }
+    if (value && typeof value === 'object') {
+      return JSON.stringify(value);
     }
     return value;
   };

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Avatar, Button } from '@mui/material';
+import { Box, Typography, Avatar, Button, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import StreamingText from './StreamingText';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import ImageIcon from '@mui/icons-material/Image';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 const ChatMessage = ({ message, onOptionClick, onStreamingComplete }) => {
   const isBot = message.type === 'bot';
@@ -62,7 +65,7 @@ const ChatMessage = ({ message, onOptionClick, onStreamingComplete }) => {
               {/* Message text with streaming effect for bot messages */}
               {isBot && message.shouldStream ? (
                 <StreamingText 
-                  text={message.message}
+                  text={typeof message.message === 'object' ? JSON.stringify(message.message) : message.message}
                   onComplete={handleStreamComplete}
                   speed={10}
                   sx={{ 
@@ -73,17 +76,21 @@ const ChatMessage = ({ message, onOptionClick, onStreamingComplete }) => {
                   }}
                 />
               ) : (
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    lineHeight: 1.8,
-                    fontSize: { xs: '0.875rem', sm: '1rem' },
-                    whiteSpace: 'pre-wrap',
-                    display: 'block'
-                  }}
-                >
-                  {message.message}
-                </Typography>
+                message.type === "user" && message.questionId === "blue_cross_documents" ? (
+                  renderFileList(message.message)
+                ) : (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      lineHeight: 1.8,
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      whiteSpace: 'pre-wrap',
+                      display: 'block'
+                    }}
+                  >
+                    {typeof message.message === 'object' ? JSON.stringify(message.message) : message.message}
+                  </Typography>
+                )
               )}
               
               {/* Render options if this is a bot message with options and streaming is complete */}
@@ -200,6 +207,60 @@ const formatTime = (timestamp) => {
   if (!timestamp) return '';
   const date = new Date(timestamp);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const getFileIcon = (type) => {
+  if (type?.startsWith('image/')) return <ImageIcon />;
+  if (type === 'application/pdf') return <PictureAsPdfIcon />;
+  return <InsertDriveFileIcon />;
+};
+
+const renderFileList = (message) => {
+  try {
+    let files = message;
+    if (typeof message === 'string') {
+      files = JSON.parse(message);
+    }
+    if (!Array.isArray(files)) {
+      files = [files];
+    }
+
+    return (
+      <List dense sx={{ py: 0, my: 0 }}>
+        {files.map((file, index) => (
+          <ListItem key={index} sx={{ px: 1, py: 0.5 }}>
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              {getFileIcon(file.type)}
+            </ListItemIcon>
+            <ListItemText
+              primary={file.name}
+              secondary={formatFileSize(file.size)}
+              sx={{
+                '& .MuiListItemText-primary': {
+                  fontSize: '0.9rem',
+                  color: '#374151'
+                },
+                '& .MuiListItemText-secondary': {
+                  fontSize: '0.75rem',
+                  color: '#6B7280'
+                }
+              }}
+            />
+          </ListItem>
+        ))}
+      </List>
+    );
+  } catch (e) {
+    return message;
+  }
 };
 
 export default ChatMessage;

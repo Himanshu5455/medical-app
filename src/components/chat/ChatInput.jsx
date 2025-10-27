@@ -24,15 +24,60 @@ import AddIcon from '@mui/icons-material/Add';
 
 const ChatInput = ({ question, currentAnswer, onAnswer, disabled, isStreamingActive, filesPermission, isEditing }) => {
   const [inputValue, setInputValue] = useState(currentAnswer || '');
-  const [files, setFiles] = useState(currentAnswer && Array.isArray(currentAnswer) ? currentAnswer : []);
+  // Initialize files state with safety checks
+  const [files, setFiles] = useState(() => {
+    if (currentAnswer && Array.isArray(currentAnswer)) {
+      return currentAnswer.map(file => {
+        if (typeof file === 'string') {
+          return { name: file };
+        }
+        return {
+          name: file.name || 'Unnamed File',
+          size: file.size || 0,
+          type: file.type || 'application/octet-stream',
+          _file: file.file || null
+        };
+      });
+    }
+    return [];
+  });
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+  
+  // Initialize files from currentAnswer if it exists
+  useEffect(() => {
+    if (currentAnswer && Array.isArray(currentAnswer)) {
+      const initialFiles = currentAnswer.map(file => {
+        if (typeof file === 'string') {
+          return { name: file };
+        }
+        return {
+          name: file.name || 'Unnamed File',
+          size: file.size || 0,
+          type: file.type || 'application/octet-stream',
+          _file: file.file || null
+        };
+      });
+      setFiles(initialFiles);
+    }
+  }, []);
 
   // On question change: if editing from summary, prefill with existing answer; otherwise clear
   useEffect(() => {
     if (isEditing) {
       if (question?.type === 'file' && Array.isArray(currentAnswer)) {
-        setFiles(currentAnswer);
+        const initialFiles = currentAnswer.map(file => {
+          if (typeof file === 'string') {
+            return { name: file, isUrl: true };
+          }
+          return { 
+            name: file.name || '', 
+            size: file.size || 0,
+            type: file.type || '',
+            file: file
+          };
+        });
+        setFiles(initialFiles);
         setInputValue('');
       } else if (question?.type === 'date') {
         // currentAnswer might be in DD/MM/YYYY; convert to Date for picker
@@ -80,7 +125,14 @@ const handleSubmit = (value = inputValue) => {
 
   // Normalize values based on question type
   if (question.type === "file") {
-    submitValue = files;
+    // Create a safe representation of files for submission
+    submitValue = files.map(fileInfo => ({
+      name: fileInfo.name,
+      size: fileInfo.size,
+      type: fileInfo.type,
+      // Include the actual File object if available
+      file: fileInfo._file || null
+    }));
   } else if (question.type === "date") {
     if (value instanceof Date) {
     
@@ -158,7 +210,16 @@ const handleSubmit = (value = inputValue) => {
 
 
   const handleFileUpload = (event) => {
-    const selectedFiles = Array.from(event.target.files || []);
+    const selectedFiles = Array.from(event.target.files || []).map(file => {
+      // Create a safe representation of the file
+      return {
+        name: file.name || 'Unnamed File',
+        size: file.size || 0,
+        type: file.type || 'application/octet-stream',
+        // Store the original file separately for submission
+        _file: file
+      };
+    });
  
     setFiles(prev => [...prev, ...selectedFiles]);
    
@@ -464,14 +525,14 @@ case "file":
             Files: {files.length}
           </Typography>
           <List dense sx={{ py: 0 }}>
-            {files.map((file, index) => (
+            {files.map((fileInfo, index) => (
               <ListItem key={index} sx={{ px: 0, py: 0.25 }}>
                 <AttachFileIcon
                   sx={{ mr: 0.5, color: "#125A67", fontSize: 14 }}
                 />
                 <ListItemText
-                  primary={file.name}
-                  secondary={`${(file.size / 1024).toFixed(1)} KB`}
+                  primary={typeof fileInfo === 'string' ? fileInfo : (fileInfo.name || 'Unnamed File')}
+                  secondary={typeof fileInfo === 'string' ? '' : (fileInfo.size ? `${(fileInfo.size / 1024).toFixed(1)} KB` : '')}
                   sx={{
                     "& .MuiListItemText-primary": { fontSize: "0.75rem" },
                     "& .MuiListItemText-secondary": { fontSize: "0.65rem" },
