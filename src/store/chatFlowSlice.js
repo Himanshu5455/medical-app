@@ -4,40 +4,33 @@ const initialState = {
   currentQuestionIndex: 0,
   answers: {
     name: '',
-    email: '',
     phone: '',
-    referral_reason: '',
-    partner_available: null,
-    partner_name: '',
-    alternative_no: '',
-    physician: '',
-    region: '',
-    dob: '',
-    OHIP: '',
-    gender: '',
-    full_address: '',
-    refer_physician_available: null,
-    refer_physician_name: '',
-    refer_physician_email: '',
-    refer_physician_address: '',
-    refer_physician_fax_no: '',
-    refer_physician_OHIP_no: '',
-    refer_physician_region: '',
-    pain_scale: '',
-    positive_experience: null,
-    rate_experience: 0,
-    comment: '',
-    files_permission: null,
-    files: [],
-    blue_cross_documents: []
+    consent_info: null,
+    referral_check: '',
+    demographics_dob: '',
+    demographics_health_card: '',
+    demographics_sex_assigned_at_birth: '',
+    demographics_email: '',
+    demographics_address: '',
+    demographics_phone: '',
+    has_ohip: null,
+    ohip_number: '',
+    alternative_insurance: '',
+    blue_cross_id_upload: null,
+    blue_cross_documents: [],
+    payment_confirmation: null
   },
   chatHistory: [],
   isCompleted: false,
-  isLoading: false
+  isLoading: false,
+  currentStep: 2,
+  isStreamingActive: false,
+  isAwaitingConfirmation: false,
+  welcomeStreamed: false
 };
 
-const questionnaireSlice = createSlice({
-  name: 'questionnaire',
+const chatFlowSlice = createSlice({
+  name: 'chatFlow',
   initialState,
   reducers: {
     setAnswer: (state, action) => {
@@ -51,45 +44,63 @@ const questionnaireSlice = createSlice({
           type: file.type,
           lastModified: file.lastModified
         }));
-      } else if (field === 'files' && Array.isArray(value)) {
-        state.answers[field] = value.map(file => ({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          lastModified: file.lastModified
-        }));
       } else {
         state.answers[field] = value;
       }
     },
+    
     addToChatHistory: (state, action) => {
       state.chatHistory.push(action.payload);
     },
-    removeToChatHistory: (state, action) => {
+    
+    removeFromChatHistory: (state, action) => {
       state.chatHistory = state.chatHistory.filter(msg => msg.questionId !== action.payload);
     },
+    
     nextQuestion: (state) => {
       state.currentQuestionIndex += 1;
     },
+    
     prevQuestion: (state) => {
       if (state.currentQuestionIndex > 0) {
         state.currentQuestionIndex -= 1;
       }
     },
+    
     setCurrentQuestion: (state, action) => {
       state.currentQuestionIndex = action.payload;
     },
-    completeQuestionnaire: (state) => {
+    
+    completeChatFlow: (state) => {
       state.isCompleted = true;
     },
-    resetQuestionnaire: (state) => {
+    
+    resetChatFlow: (state) => {
       return { ...initialState };
     },
+    
     setLoading: (state, action) => {
       state.isLoading = action.payload;
     },
+    
     loadFromStorage: (state, action) => {
       return { ...state, ...action.payload };
+    },
+    
+    setCurrentStep: (state, action) => {
+      state.currentStep = action.payload;
+    },
+    
+    setStreamingActive: (state, action) => {
+      state.isStreamingActive = action.payload;
+    },
+    
+    setAwaitingConfirmation: (state, action) => {
+      state.isAwaitingConfirmation = action.payload;
+    },
+    
+    setWelcomeStreamed: (state, action) => {
+      state.welcomeStreamed = action.payload;
     }
   }
 });
@@ -97,14 +108,18 @@ const questionnaireSlice = createSlice({
 export const {
   setAnswer,
   addToChatHistory,
-  removeToChatHistory,
+  removeFromChatHistory,
   nextQuestion,
   prevQuestion,
   setCurrentQuestion,
-  completeQuestionnaire,
-  resetQuestionnaire,
+  completeChatFlow,
+  resetChatFlow,
   setLoading,
-  loadFromStorage
-} = questionnaireSlice.actions;
+  loadFromStorage,
+  setCurrentStep,
+  setStreamingActive,
+  setAwaitingConfirmation,
+  setWelcomeStreamed
+} = chatFlowSlice.actions;
 
-export default questionnaireSlice.reducer;
+export default chatFlowSlice.reducer;

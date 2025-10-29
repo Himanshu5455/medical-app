@@ -16,6 +16,7 @@ const TriageManagement = lazy(() => import("./pages/TriageManagement"));
 const PatientDetailsPage = lazy(() => import("./pages/PatientDetailsPage"));
 const ChatbotQuestionnaire = lazy(() => import("./pages/ChatbotQuestionnaire"));
 const EmberIntake = lazy(() => import("./pages/EmberIntake"));
+const ChatbotFlow = lazy(() => import("./pages/ChatbotFlow"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
@@ -60,6 +61,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<ChatbotQuestionnaire />} />
                 <Route path="/ember-intake" element={<EmberIntake />} />
+                <Route path="/chatbot-flow" element={<ChatbotFlow />} />
                 <Route path="/admin/login" element={<LoginPage />} />
                 <Route element={<MainLayout />}>
                   <Route

@@ -15,16 +15,91 @@ export const QUESTIONS = [
     required: true,
     validation: (value) => value.replace(/\D/g, '').length >= 10 ? null : "Please enter a valid phone number"
   },
+ {
+    id: 'consent_info',
+    type: 'boolean',
+    question: (answers) => `Thank you very much, ${answers.name || 'there'}!
+
+Before we move on to the next steps, I would like to know if you consent to sharing your personal information.
+
+Your data is 100% secure with us and will only be used to provide you the best support, okay?`,
+    options: [
+      { value: true, label: 'Yes' },
+      { value: false, label: 'No' }
+    ],
+    required: true
+  },
+  
+  // Step 3: Referral & Demographics Flow
   {
-    id: 'email',
+    id: 'has_referral',
+    type: 'select',
+    question: "Do you have a referral?",
+    options: [
+      { value: 'yes_i_do', label: 'Yes, I do' },
+      { value: 'yes_from_sprout', label: 'Yes, from Sprout' },
+      { value: 'no_i_dont', label: "No, I don't" }
+    ],
+    required: true
+  },
+  {
+    id: 'demographics_name',
+    type: 'text',
+    question: "Okay, what's your full name?",
+    placeholder: "Enter your full name",
+    required: true,
+    validation: (value) => value.trim().length >= 2 ? null : "Please enter your full name"
+  },
+  {
+    id: 'demographics_dob',
+    type: 'date',
+    question: "What's your date of birth?",
+    required: true
+  },
+  {
+    id: 'demographics_email',
     type: 'email',
-    question: "Great to meet you! What's your email address?",
+    question: "What's your email address?",
     placeholder: "Enter your email address",
     required: true,
     validation: (value) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(value) ? null : "Please enter a valid email address";
     }
+  },
+  {
+    id: 'demographics_health_card',
+    type: 'text',
+    question: "Could you please provide your health card number?",
+    placeholder: "Enter your health card number",
+    required: false
+  },
+  {
+    id: 'demographics_sex_assigned_at_birth',
+    type: 'select',
+    question: "What sex were you assigned at birth?",
+    options: [
+      { value: 'female', label: 'Female' },
+      { value: 'male', label: 'Male' },
+      { value: 'other', label: 'Other' },
+      { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+    ],
+    required: false
+  },
+  {
+    id: 'demographics_address',
+    type: 'textarea',
+    question: "What's your full address?",
+    placeholder: "Enter your complete address",
+    required: false
+  },
+  {
+    id: 'demographics_phone',
+    type: 'tel',
+    question: "What's your phone number?",
+    placeholder: "Enter your phone number",
+    required: true,
+    validation: (value) => value.replace(/\D/g, '').length >= 10 ? null : "Please enter a valid phone number"
   },
  
   {

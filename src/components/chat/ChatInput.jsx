@@ -24,15 +24,60 @@ import AddIcon from '@mui/icons-material/Add';
 
 const ChatInput = ({ question, currentAnswer, onAnswer, disabled, isStreamingActive, filesPermission, isEditing }) => {
   const [inputValue, setInputValue] = useState(currentAnswer || '');
-  const [files, setFiles] = useState(currentAnswer && Array.isArray(currentAnswer) ? currentAnswer : []);
+  // Initialize files state with safety checks
+  const [files, setFiles] = useState(() => {
+    if (currentAnswer && Array.isArray(currentAnswer)) {
+      return currentAnswer.map(file => {
+        if (typeof file === 'string') {
+          return { name: file };
+        }
+        return {
+          name: file.name || 'Unnamed File',
+          size: file.size || 0,
+          type: file.type || 'application/octet-stream',
+          _file: file.file || null
+        };
+      });
+    }
+    return [];
+  });
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+  
+  // Initialize files from currentAnswer if it exists
+  useEffect(() => {
+    if (currentAnswer && Array.isArray(currentAnswer)) {
+      const initialFiles = currentAnswer.map(file => {
+        if (typeof file === 'string') {
+          return { name: file };
+        }
+        return {
+          name: file.name || 'Unnamed File',
+          size: file.size || 0,
+          type: file.type || 'application/octet-stream',
+          _file: file.file || null
+        };
+      });
+      setFiles(initialFiles);
+    }
+  }, []);
 
   // On question change: if editing from summary, prefill with existing answer; otherwise clear
   useEffect(() => {
     if (isEditing) {
       if (question?.type === 'file' && Array.isArray(currentAnswer)) {
-        setFiles(currentAnswer);
+        const initialFiles = currentAnswer.map(file => {
+          if (typeof file === 'string') {
+            return { name: file, isUrl: true };
+          }
+          return { 
+            name: file.name || '', 
+            size: file.size || 0,
+            type: file.type || '',
+            file: file
+          };
+        });
+        setFiles(initialFiles);
         setInputValue('');
       } else if (question?.type === 'date') {
         // currentAnswer might be in DD/MM/YYYY; convert to Date for picker
@@ -69,10 +114,9 @@ const handleSubmit = (value = inputValue) => {
 
   let submitValue;
 
-
+  // Special handling for files_permission question
   if (question.id === "files_permission") {
     if (value === false) {
-      
       setError("");
       onAnswer(false);
       return; // exit early
@@ -81,7 +125,14 @@ const handleSubmit = (value = inputValue) => {
 
   // Normalize values based on question type
   if (question.type === "file") {
-    submitValue = files;
+    // Create a safe representation of files for submission
+    submitValue = files.map(fileInfo => ({
+      name: fileInfo.name,
+      size: fileInfo.size,
+      type: fileInfo.type,
+      // Include the actual File object if available
+      file: fileInfo._file || null
+    }));
   } else if (question.type === "date") {
     if (value instanceof Date) {
     
@@ -100,6 +151,21 @@ const handleSubmit = (value = inputValue) => {
       }
     } else {
       submitValue = value || "";
+    }
+  } else if (question.type === "boolean") {
+    // Convert text input to boolean for boolean questions
+    if (typeof value === "string") {
+      const lowerValue = value.toLowerCase().trim();
+      if (lowerValue === "yes" || lowerValue === "true" || lowerValue === "y") {
+        submitValue = true;
+      } else if (lowerValue === "no" || lowerValue === "false" || lowerValue === "n") {
+        submitValue = false;
+      } else {
+        // If it's not a recognizable boolean value, treat as text
+        submitValue = value;
+      }
+    } else {
+      submitValue = value;
     }
   } else {
     submitValue = value;
@@ -144,7 +210,16 @@ const handleSubmit = (value = inputValue) => {
 
 
   const handleFileUpload = (event) => {
-    const selectedFiles = Array.from(event.target.files || []);
+    const selectedFiles = Array.from(event.target.files || []).map(file => {
+      // Create a safe representation of the file
+      return {
+        name: file.name || 'Unnamed File',
+        size: file.size || 0,
+        type: file.type || 'application/octet-stream',
+        // Store the original file separately for submission
+        _file: file
+      };
+    });
  
     setFiles(prev => [...prev, ...selectedFiles]);
    
@@ -239,61 +314,42 @@ case "boolean":
       <TextField
         fullWidth
         variant="outlined"
-        value={inputValue === true ? "Yes" : inputValue === false ? "No" : ""}
-        placeholder="Select Yes or No"
-        InputProps={{
-          readOnly: true,
-        }}
+        placeholder="Type your response..."
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyPress={handleKeyPress}
+        disabled={disabled}
         size="small"
         sx={{
           flex: 1,
           "& .MuiOutlinedInput-root": {
             borderRadius: 20,
             backgroundColor: "white",
+            fontSize: { xs: "0.875rem", sm: "1rem" },
           },
         }}
-        disabled={disabled}
       />
-
-      {/* Yes Button */}
-      <Button
-        variant="outlined"
-        onClick={() => {
-          if (question.id === "files_permission") {
-            handleSubmit(true); // auto-submit only for file permission
-          } else {
-            setInputValue(true);
-          }
-        }}
-        disabled={disabled}
+      <IconButton
+        onClick={() => handleSubmit()}
+        disabled={
+          disabled ||
+          (typeof inputValue === "string"
+            ? !inputValue.trim()
+            : !inputValue) ||
+          isStreamingActive
+        }
         sx={{
-          borderRadius: 20,
-          textTransform: "none",
-          minWidth: 64,
+          bgcolor: "#125A67",
+          color: "white !important",
+          width: 40,
+          height: 40,
+          flexShrink: 0,
+          "&:hover": { bgcolor: "#0d434c", color: "white !important" },
+          "&:disabled": { bgcolor: "#e0e0e0", color: "#9CA3AF" },
         }}
       >
-        Yes
-      </Button>
-
-      {/* No Button */}
-      <Button
-        variant="outlined"
-        onClick={() => {
-          if (question.id === "files_permission") {
-            handleSubmit(false); // auto-submit only here
-          } else {
-            setInputValue(false);
-          }
-        }}
-        disabled={disabled}
-        sx={{
-          borderRadius: 20,
-          textTransform: "none",
-          minWidth: 64,
-        }}
-      >
-        No
-      </Button>
+        <SendIcon sx={{ color: "white" }} />
+      </IconButton>
     </Box>
   );
 
@@ -469,14 +525,14 @@ case "file":
             Files: {files.length}
           </Typography>
           <List dense sx={{ py: 0 }}>
-            {files.map((file, index) => (
+            {files.map((fileInfo, index) => (
               <ListItem key={index} sx={{ px: 0, py: 0.25 }}>
                 <AttachFileIcon
                   sx={{ mr: 0.5, color: "#125A67", fontSize: 14 }}
                 />
                 <ListItemText
-                  primary={file.name}
-                  secondary={`${(file.size / 1024).toFixed(1)} KB`}
+                  primary={typeof fileInfo === 'string' ? fileInfo : (fileInfo.name || 'Unnamed File')}
+                  secondary={typeof fileInfo === 'string' ? '' : (fileInfo.size ? `${(fileInfo.size / 1024).toFixed(1)} KB` : '')}
                   sx={{
                     "& .MuiListItemText-primary": { fontSize: "0.75rem" },
                     "& .MuiListItemText-secondary": { fontSize: "0.65rem" },

@@ -198,6 +198,55 @@ const ChatbotQuestionnaire = () => {
       })
     );
 
+    // Handle consent response
+    if (question.id === 'consent_info' && normalizedValue === false) {
+      // User declined consent - show admin contact message and complete questionnaire
+      withTyping(dispatch, 1500, () => {
+        setIsStreamingActive(true);
+        dispatch(
+          addToChatHistory({
+            type: "bot",
+            message: "If you don't feel comfortable sharing your information with me, we’ll refer you to one of our specialists to get in touch with you.",
+            timestamp: new Date().toISOString(),
+            questionId: "consent-declined",
+            shouldStream: true,
+          })
+        );
+        dispatch(completeQuestionnaire());
+      });
+      return;
+    }
+
+    // Handle referral response - proceed to demographics regardless of answer
+    if (question.id === 'has_referral') {
+      // Add a contextual message based on referral type (only if there is one)
+      let contextualMessage = "";
+      if (normalizedValue === 'yes_from_sprout') {
+        contextualMessage = "Great! Since you're referred from Sprout, we'll proceed with collecting your demographic information. Note that you may not necessarily have an OHIP number.";
+      } else if (normalizedValue === 'yes_i_do') {
+        contextualMessage = "Perfect! Let's collect your demographic information to get started.";
+      }
+
+      // Only add contextual message if there is one
+      if (contextualMessage) {
+        withTyping(dispatch, 1500, () => {
+          setIsStreamingActive(true);
+          dispatch(
+            addToChatHistory({
+              type: "bot",
+              message: contextualMessage,
+              timestamp: new Date().toISOString(),
+              questionId: "referral-context",
+              shouldStream: true,
+            })
+          );
+        });
+      }
+
+      // Continue with normal flow to next question (demographics_name)
+      // The normal progression logic below will handle moving to the next question
+    }
+
     // If we are editing from summary, regenerate summary immediately and skip normal progression
     if (isReturnToSummary) {
       withTyping(dispatch, 800, () => {
@@ -239,6 +288,12 @@ const ChatbotQuestionnaire = () => {
         setIsStreamingActive(true);
 
         let botMessage = nextQ.question;
+        
+        // Handle dynamic questions that depend on answers
+        if (typeof nextQ.question === 'function') {
+          botMessage = nextQ.question(effectiveAnswers);
+        }
+        
         if (nextQ.id === "exams_to_share") {
           botMessage = "Do you have any exams to share with us?";
         }
