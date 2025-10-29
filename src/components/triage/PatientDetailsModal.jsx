@@ -23,7 +23,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 // Component to display patient details in a modal
 const PatientDetailsModal = ({ open, onClose, patient, position }) => {
-  console.log("PatientDetailsModal patient:", patient);
+  // console.log("PatientDetailsModal patient:", patient);
   const [patientData, setPatientData] = useState(patient);
   const navigate = useNavigate();
 
@@ -32,6 +32,8 @@ const PatientDetailsModal = ({ open, onClose, patient, position }) => {
   }, [patient]);
 
   if (!patient) return null;
+console.log("Patient adress:", patient.answers.full_address);
+// console.log("Patient answers keys:", Object.keys(patient.answers || {}));
 
   // Normalize patient data
   const age = patient.answers?.age || patient.age || "N/A";
@@ -43,15 +45,13 @@ const PatientDetailsModal = ({ open, onClose, patient, position }) => {
     "N/A";
   const email =
     patient.email || patient.username || patient.answers?.email || "N/A";
-  const referrer =
-    patient.answers.referring ||
-    patient.referrer ||
-    patient.answers?.refer_physician_name ||
-    "N/A";
   const referralReason =
     patient.answers?.referral_reason || patient.referral_reason || "N/A";
   const partnerName =
     patient.answers?.partner_name || patient.partnerName || "N/A";
+    const address = patient.answers.full_address ||"N/A";
+    const ohipnumber = patient.answers.OHIP ||"N/A";
+    const sexatbirth = patient.answers.gender ||"N/A";
   const hasPartner = Boolean(patient.partner || patient.answers?.partner);
 
   // Normalize files
@@ -312,14 +312,15 @@ const PatientDetailsModal = ({ open, onClose, patient, position }) => {
                     variant="caption"
                     sx={{ color: COLORS.textSecondary }}
                   >
-                    Referrer
+                    Address
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{ fontWeight: 500, color: COLORS.textPrimary }}
                   >
-                    {referrer}
+                    {address}
                   </Typography>
+
                 </Box>
               </Box>
               <Box
@@ -366,6 +367,54 @@ const PatientDetailsModal = ({ open, onClose, patient, position }) => {
                     sx={{ fontWeight: 500, color: COLORS.textPrimary }}
                   >
                     {hasPartner ? "Yes" : "No"}
+                  </Typography>
+                </Box>
+             
+              </Box>
+                     <Box
+                sx={{
+                  display: "flex",
+                  borderBottom: `1px solid ${COLORS.border}`,
+                }}
+              >
+                <Box
+                  sx={{
+                    flex: 1,
+                    p: 2,
+                    borderRight: `1px solid ${COLORS.border}`,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{ color: COLORS.textSecondary }}
+                  >
+                    OHIP
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 500, color: COLORS.textPrimary }}
+                  >
+                    {ohipnumber}
+                  </Typography>
+                </Box>
+                <Box
+                  sx={{
+                    flex: 1,
+                    p: 2,
+                    borderRight: `1px solid ${COLORS.border}`,
+                  }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{ color: COLORS.textSecondary }}
+                  >
+                    Sex at birth 
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: 500, color: COLORS.textPrimary }}
+                  >
+                    {sexatbirth}
                   </Typography>
                 </Box>
              
@@ -660,6 +709,8 @@ PatientDetailsModal.propTypes = {
     mobile: PropTypes.string,
     contact: PropTypes.string,
     email: PropTypes.string,
+    sexatbirth: PropTypes.string,
+    ohipnumber: PropTypes.string,
     username: PropTypes.string,
     referrer: PropTypes.string,
     referral_reason: PropTypes.string,
@@ -671,6 +722,7 @@ PatientDetailsModal.propTypes = {
     answers: PropTypes.shape({
       phone: PropTypes.string,
       email: PropTypes.string,
+      address: PropTypes.string,
       refer_physician_name: PropTypes.string,
       referral_reason: PropTypes.string,
       partner: PropTypes.any,
