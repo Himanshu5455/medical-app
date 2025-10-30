@@ -57,9 +57,10 @@ function App() {
         <CssBaseline />
         <div style={appContainerStyle}>
           <Router>
+            
             <Suspense fallback={null}>
               <Routes>
-                <Route path="/" element={<ChatbotQuestionnaire />} />
+                <Route path="/" element={<EmberIntake />} />
                 <Route path="/ember-intake" element={<EmberIntake />} />
                 <Route path="/chatbot-flow" element={<ChatbotFlow />} />
                 <Route path="/admin/login" element={<LoginPage />} />

@@ -396,19 +396,19 @@ export const createFlowHandlers = (
     }
 
     // === PARTNER YES/NO ===
-    // if (step === "partner" && questionId === "partner") {
-    //   pushUser(label, questionId);
-    //   setData((d) => ({ ...d, hasPartner: !!value }));
-    //   if (value) {
-    //     pushBot("Please provide your partner's name:", {
-    //       questionId: "partnerName",
-    //     });
-    //     proceed("partnerName", { type: "text", questionId: "partnerName" });
-    //     return;
-    //   }
-    //   endFlow();
-    //   return;
-    // }
+    if (step === "partner" && questionId === "partner") {
+      pushUser(label, questionId);
+      setData((d) => ({ ...d, hasPartner: !!value }));
+      if (value) {
+        pushBot("Please provide your partner's name:", {
+          questionId: "partnerName",
+        });
+        proceed("partnerName", { type: "text", questionId: "partnerName" });
+        return;
+      }
+      endFlow();
+      return;
+    }
 
     // === PARTNER NAME (handled in handleAnswer below) ===
 
@@ -423,6 +423,52 @@ export const createFlowHandlers = (
     // === PARTNER ADDRESS (handled in handleAnswer) ===
 
     // === PARTNER PHONE (handled in handleAnswer) ===
+
+    // === PARTNER SEX ===
+    if (step === "partnerSex" && questionId === "partnerSex") {
+      pushUser(label, questionId);
+      setData((d) => ({
+        ...d,
+        partner: { ...d.partner, sexAtBirth: String(value) },
+      }));
+      pushBot(
+        "Please upload your partner's medical records (optional). If you don't have any at the moment, just select the 'Skip' option below.",
+        {
+          questionId: "partnerRecordsChoice",
+          options: [
+            { value: "upload", label: "Upload Medical Records" },
+            { value: "skip", label: "Skip" },
+          ],
+        }
+      );
+      proceed("partnerRecordsChoice", { type: "option", questionId: "partnerRecordsChoice" });
+      return;
+    }
+
+    // === PARTNER MEDICAL RECORDS CHOICE ===
+    if (step === "partnerRecordsChoice" && questionId === "partnerRecordsChoice") {
+      pushUser(label, questionId);
+      if (value === "upload") {
+        pushBot("Please upload your partner's medical records", {
+          questionId: "partnerRecordsUpload",
+        });
+        proceed("partnerRecordsUpload", {
+          type: "file",
+          questionId: "partnerRecordsUpload",
+          accept: "image/*,application/pdf",
+          multiple: true,
+        });
+        return;
+      }
+      if (value === "skip") {
+        pushBot("Please provide your partner's email:", {
+          questionId: "partnerEmail",
+        });
+        proceed("partnerEmail", { type: "text", questionId: "partnerEmail" });
+        return;
+      }
+      return;
+    }
 
     // Fallback: if this option belongs to the current step/question, route it to the generic answer handler
     const activeQuestionId = awaiting?.questionId || step;
@@ -534,6 +580,18 @@ export const createFlowHandlers = (
     proceed("partnerSex", { type: "option", questionId: "partnerSex" });
     return;
     }
+
+    if (step === "partnerRecordsUpload") {
+    setData((d) => ({
+      ...d,
+      partner: { ...d.partner, medicalRecords: Array.isArray(value) ? value : [] },
+    }));
+    pushBot("Please provide your partner's email:", {
+      questionId: "partnerEmail",
+    });
+    proceed("partnerEmail", { type: "text", questionId: "partnerEmail" });
+    return;
+    }
       return;
     }
 
@@ -553,8 +611,17 @@ export const createFlowHandlers = (
       return;
     }
 
-      if (step === "email") {
+    if (step === "email") {
       setData((d) => ({ ...d, email: String(value).trim() }));
+      pushBot("Please tell me your phone number", {
+        questionId: "phone",
+      });
+      proceed("phone", { type: "text", questionId: "phone" });
+      return;
+    }
+
+    if (step === "phone") {
+      setData((d) => ({ ...d, phone: String(value).trim() }));
       pushBot("Now, tell me your Date of birth:", { questionId: "dob" });
       proceed("dob", { type: "date", questionId: "dob" });
       return;
@@ -822,20 +889,6 @@ export const createFlowHandlers = (
         }
       );
       proceed("recordsChoice", { type: "option", questionId: "recordsChoice" });
-      return;
-    }
-
-   if (step === "partner") {
-    //   pushUser(label, questionId);
-      setData((d) => ({ ...d, hasPartner: !!value }));
-      if (value) {
-        pushBot("Please provide your partner's name:", {
-          questionId: "partnerName",
-        });
-        proceed("partnerName", { type: "text", questionId: "partnerName" });
-        return;
-      }
-      endFlow();
       return;
     }
 
