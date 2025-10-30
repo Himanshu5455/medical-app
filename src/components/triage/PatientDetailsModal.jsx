@@ -32,8 +32,6 @@ const PatientDetailsModal = ({ open, onClose, patient, position }) => {
   }, [patient]);
 
   if (!patient) return null;
-console.log("Patient adress:", patient.answers.full_address);
-// console.log("Patient answers keys:", Object.keys(patient.answers || {}));
 
   // Normalize patient data
   const age = patient.answers?.age || patient.age || "N/A";

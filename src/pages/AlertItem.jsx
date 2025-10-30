@@ -2,8 +2,6 @@ import { Box, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import DescriptionIcon from '@mui/icons-material/Description';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import InfoIcon from '@mui/icons-material/Info';
-import { COLORS } from '../components/color/Colors';
 
 const AlertItem = ({ type, message }) => {
   let IconComponent, styles;
@@ -31,6 +29,14 @@ const AlertItem = ({ type, message }) => {
         borderColor: '#F57C00',
         backgroundColor: '#FFF4E5',
         iconColor: '#F57C00',
+      };
+      break;
+          case 'age':
+      IconComponent = InfoOutlinedIcon;
+      styles = {
+        borderColor: '#F44336',
+        backgroundColor: '#FDECEA',
+        iconColor: '#F44336',
       };
       break;
     default:
