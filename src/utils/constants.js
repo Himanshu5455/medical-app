@@ -13,3 +13,8 @@ export const priorityColors = {
   'Low': '#20B2AA',
   'Rejected': '#9CA3AF'
 };
+
+
+// src/utils/constants.js
+export const WELCOME_TEXT =
+  "Hello, my name is Ember.\nI am your triage assistant here at Marham Fertility Centre. It is a pleasure to have you here with us! To begin the process, please tell me your Name, last name, phone number.";

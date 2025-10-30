@@ -1,35 +1,19 @@
 import http from './http';
 
 export async function registerCustomer(payload) {
-  const form = new FormData();
-  Object.entries(payload).forEach(([k, v]) => {
-    if (v === undefined || v === null) return;
+  console.log('Registering customer with payload:', payload);
+  console.log("payload", payload)
 
-    if (k === 'files' && Array.isArray(v)) {
-      v.forEach((item) => {
-        if (item instanceof File || item instanceof Blob) {
-          const fileName = item.name || 'upload.dat';
-          form.append('files', item, fileName);
-        }
-      });
-      return;
-    }
-    if (Array.isArray(v)) {
-      form.append(k, JSON.stringify(v));
-      return;
-    }
-    if (typeof v === 'object') {
-      form.append(k, JSON.stringify(v));
-      return;
-    }
-    form.append(k, String(v));
+  const form = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    form.append(key, value);
   });
 
-  // Axios handles response and errors via interceptors
   return await http.post('/mfc/register-customer', form, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
 }
+
 
 export function serializeCustomerPayload(answers) {
   const payload = { ...answers };

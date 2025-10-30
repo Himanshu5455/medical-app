@@ -243,8 +243,6 @@ const ChatbotQuestionnaire = () => {
         });
       }
 
-      // Continue with normal flow to next question (demographics_name)
-      // The normal progression logic below will handle moving to the next question
     }
 
     // If we are editing from summary, regenerate summary immediately and skip normal progression
