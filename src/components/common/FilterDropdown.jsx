@@ -5,7 +5,7 @@ import InputLabel from '@mui/material/InputLabel';
 
 const FilterDropdown = ({ label, value, onChange, options }) => {
   return (
-    <FormControl size="small" sx={{ minWidth: 150 }}>
+    <FormControl size="small" sx={{ minWidth: 100 }}>
       <InputLabel id={`${label}-label`}>{label}</InputLabel>
       <Select
         labelId={`${label}-label`}

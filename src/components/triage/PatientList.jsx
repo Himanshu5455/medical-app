@@ -96,11 +96,11 @@ const referrerMapping = {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex gap-2 mb-6 overflow-x-auto">
+      <div className="flex gap-2 mb-6 overflow-x-auto p-3 sm:p-0">
         <SearchBar
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-          className="w-40 border rounded p-1 text-sm"
+          className="w-80 border border-gray-300 rounded text-sm"
           placeholder="Search by patient name or ID"
         />
 
