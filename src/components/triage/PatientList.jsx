@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import SearchBar from '../common/SearchBar';
@@ -12,6 +12,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CustomPagination from '../ui/CustomPagination';
 
+
 const PatientList = ({ patients = [] }) => {
   const [view, setView] = useState('table');
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,14 +21,22 @@ const PatientList = ({ patients = [] }) => {
   const [filters, setFilters] = useState({
     referrer: '', status: '', priority: '', entryDate: null, age: '', gender: ''
   });
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const handleFilterChange = (filterName) => (event) => {
     setFilters(prev => ({ ...prev, [filterName]: event.target.value }));
     setPage(1);
   };
 
+const referrerMapping = {
+  "Yes, I do": "Self",
+  "Yes, from Sprout": "Partner",
+  "No, I don’t": "None"
+};
+
   const filterOptions = {
-    referrer: [...new Set(patients.map(p => p.referrer))],
+    // referrer: [...new Set(patients.map(p => p.referrer))],
+    referrer: Object.keys(referrerMapping),
     status: [...new Set(patients.map(p => p.status))],
     priority: [...new Set(patients.map(p => p.priority))],
     entryDate: ['Today', 'This Week', 'This Month'],
@@ -37,7 +46,11 @@ const PatientList = ({ patients = [] }) => {
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesReferrer = filters.referrer ? patient.referrer === filters.referrer : true;
+    // const matchesReferrer = filters.referrer ? patient.referrer === filters.referrer : true;
+    const matchesReferrer = filters.referrer
+  ? patient.referrer === referrerMapping[filters.referrer]
+  : true;
+
     const matchesStatus = filters.status ? patient.status === filters.status : true;
     const matchesPriority = filters.priority ? patient.priority === filters.priority : true;
     const matchesGender = filters.gender ? patient.gender === filters.gender : true;
@@ -66,6 +79,8 @@ const PatientList = ({ patients = [] }) => {
     return matchesSearch && matchesReferrer && matchesStatus && matchesPriority && matchesAge && matchesGender && matchesDate;
   });
 
+
+
   const totalItems = filteredPatients.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -81,11 +96,11 @@ const PatientList = ({ patients = [] }) => {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex gap-2 mb-6 overflow-x-auto">
+      <div className="flex gap-2 mb-6 overflow-x-auto p-3 sm:p-0">
         <SearchBar
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-          className="w-40 border rounded p-1 text-sm"
+          className="w-80 border border-gray-300 rounded text-sm"
           placeholder="Search by patient name or ID"
         />
 
@@ -113,23 +128,46 @@ const PatientList = ({ patients = [] }) => {
           className="w-32 border rounded p-1 text-sm"
         />
 
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label="Entry Date"
-            value={filters.entryDate}
-            onChange={(newDate) => { setFilters(prev => ({ ...prev, entryDate: newDate })); setPage(1); }}
-            slotProps={{
-              textField: {
-                size: "small",
-                sx: {
-                  minWidth: 120,
-                  '& .MuiInputBase-root': { borderRadius: 4, borderColor: '#d1d5db', padding: '2px' },
-                  '& .MuiSvgIcon-root': { display: 'none' }
-                }
-              }
-            }}
-          />
-        </LocalizationProvider>
+ 
+<LocalizationProvider dateAdapter={AdapterDateFns}>
+  <DatePicker
+    label="Entry Date"
+    value={filters.entryDate}
+    onChange={(newDate) => {
+      setFilters(prev => ({ ...prev, entryDate: newDate }));
+      setPage(1);
+      setIsDatePickerOpen(false);
+    }}
+    open={isDatePickerOpen}
+    onOpen={() => setIsDatePickerOpen(true)}
+    onClose={() => setIsDatePickerOpen(false)}
+    slotProps={{
+      textField: {
+        size: "small",
+        sx: {
+          minWidth: 120,
+          '& .MuiInputBase-root': {
+            borderRadius: 4,
+            borderColor: '#d1d5db',
+            padding: '2px',
+          },
+          '& .MuiSvgIcon-root': { display: 'none' },
+        },
+        onClick: (e) => {
+          e.stopPropagation(); // optional
+          setIsDatePickerOpen(true);
+        },
+      },
+      popper: {
+        sx: { zIndex: 1500 },
+        modifiers: [{ name: "offset", options: { offset: [0, 6] } }],
+      },
+    }}
+  />
+</LocalizationProvider>
+
+
+
 
         <FilterDropdown
           label="Age"
@@ -165,3 +203,4 @@ const PatientList = ({ patients = [] }) => {
 };
 
 export default PatientList;
+

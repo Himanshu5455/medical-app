@@ -25,11 +25,11 @@ const statusGroups = [
   return (
     <div className="mb-6">
       <Box className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-        {/* Title and Total */}
+   
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className='text-[#053C47]'>
             <div className="flex items-baseline gap-2">
-              <Typography sx={{ fontSize: '1.125rem', fontWeight: 500 }} className="whitespace-nowrap">
+              <Typography sx={{ fontSize: '1.125rem', fontWeight: 500 }} className="sm:whitespace-nowrap">
                 Patients in triage
               </Typography>
             </div>
@@ -38,13 +38,14 @@ const statusGroups = [
             </Typography>
           </div>
 
-          {/* Individual Status Numbers */}
-          <div className="flex flex-wrap justify-start sm:justify-evenly gap-4 sm:gap-8 mt-4 sm:mt-0">
+ 
+<div class="flex flex-wrap justify-start sm:justify-evenly gap-6 sm:gap-4 mt-4 sm:mt-0 w-full">
+
             {statusGroups.map((status) => (
-              <div key={status.label} className="text-left min-w-[150px]">
-                <Typography className="text-sm text-gray-600 mb-1">{status.label}</Typography>
+              <div key={status.label} className="text-left min-w-0 sm:min-w-[140px]">
+                <Typography className="text-xs sm:text-sm text-gray-600 mb-1">{status.label}</Typography>
                 <Typography 
-                  className="text-2xl font-semibold"
+                  className="text-xl sm:text-2xl font-semibold"
                   style={{ color: statusColors[status.label] || '#374151' }}
                 >
                   {status.value}
@@ -64,7 +65,7 @@ const statusGroups = [
           {statusBreakdown.map((s) => (
             <div key={s.label} className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full" style={{ background: statusColors[s.label] }}></span>
-              <span className="text-sm text-gray-600">{s.label}</span>
+              <span className="text-xs sm:text-sm text-gray-600">{s.label}</span>
             </div>
           ))}
         </div>

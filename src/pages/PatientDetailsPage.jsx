@@ -109,66 +109,79 @@ const PatientDetailsPage = () => {
     triageComplete: false,
   });
 
+const notesExist = (() => {
+  if (!patient?.answers?.note_title) return false;
+  try {
+    const titles = JSON.parse(patient.answers.note_title);
+    return Object.keys(titles).length > 0;
+  } catch (e) {
+    return false;
+  }
+})();
 
+const missingDetails = (() => {
+  if (!patient) return [];
+  const details = [
+    { label: "Age", value: patient?.answers?.age },
+    { label: "Contact", value: patient?.contact_info?.phone },
+    { label: "Email", value: patient?.contact_info?.email },
+    { label: "Referrer", value: patient?.answers?.referring },
+    { label: "Referral reason", value: patient?.answers?.referral_reason },
+    { label: "Partner", value: patient?.partner ? "Yes" : "No" },
+    { label: "Partner Name", value: patient?.answers?.partner_name },
+    { label: "Priority", value: patient?.priority },
+  ];
 
-  // Hardcoded alerts (restored as per request)
-  // const alerts = [
-  //   { type: 'info', message: 'New notes', color: '#E3F2FD' },
-  //   {
-  //   type: 'error',
-  //   message: patient?.priority
-  //     ? `${patient.priority}`
-  //     : 'Priority information not available',
-  //   color: '#FFEBEE',
-  // },
-  //   { type: 'warning', message: 'Incomplete Information', color: '#FFF8E1' },
-  // ];
-
+  return details
+    .filter((d) => !d.value || d.value === "N/A")
+    .map((d) => d.label);
+})();
 
 const alerts = [
-  { type: 'info', message: 'New notes', color: '#E3F2FD' },
+  ...(notesExist
+    ? [
+        {
+          type: "info",
+          message: "New notes",
+          color: "#E3F2FD",
+        },
+      ]
+    : []),
   {
-    type: 'error',
+    type: "error",
     message: patient?.priority
       ? `Priority: ${patient.priority}`
-      : 'Priority information not available',
+      : "Priority information not available",
     color:
-      patient?.priority === 'High'
-        ? '#FFEBEE'
-        : patient?.priority === 'Medium'
-        ? '#FFF8E1'
-        : patient?.priority === 'Low'
-        ? '#E8F5E9'
-        : '#E0E0E0',
+      patient?.priority === "High"
+        ? "#FFEBEE"
+        : patient?.priority === "Medium"
+        ? "#FFF8E1"
+        : patient?.priority === "Low"
+        ? "#E8F5E9"
+        : "#E0E0E0",
   },
-  {
-    type: 'warning',
-    message: (() => {
-      if (!patient) return 'Patient data not loaded yet';
-
-      const details = [
-        { label: 'Age', value: patient?.answers?.age },
-        { label: 'Contact', value: patient?.contact_info?.phone },
-        { label: 'Email', value: patient?.contact_info?.email },
-        { label: 'Referrer', value: patient?.answers?.referring },
-        { label: 'Referral reason', value: patient?.answers?.referral_reason },
-        { label: 'Partner', value: patient?.partner ? 'Yes' : 'No' },
-        { label: 'Partner Name', value: patient?.answers?.partner_name },
-        { label: 'Priority', value: patient?.priority },
-      ];
-
-      const missing = details
-        .filter((d) => !d.value || d.value === 'N/A')
-        .map((d) => d.label);
-
-      return missing.length > 0
-        ? `Incomplete Information: ${missing.join(', ')}`
-        : 'All required information is complete';
-    })(),
-    color: '#FFF8E1',
-  },
+  ...(missingDetails.length > 0
+    ? [
+        {
+          type: "warning",
+          message: `Incomplete Information: ${missingDetails.join(", ")}`,
+          color: "#FFF8E1",
+        },
+      ]
+    : []),
 ];
 
+
+// ✅ Add Advanced Age alert dynamically
+const age = Number(patient?.answers?.age);
+if (!isNaN(age) && age > 35) {
+  alerts.push({
+    type: 'age',
+    message: 'Advanced Age',
+    color: '#E1F5FE',
+  });
+}
 
   // Fetch patient data
   useEffect(() => {
@@ -238,12 +251,18 @@ const alerts = [
     );
   }
 
+  console.log("Patient address:", patient.answers.full_address);  
   // Patient details data
  const patientDetails = [
     { label: "Age", value: patient.answers?.age },
     { label: "Contact", value: patient.contact_info?.phone },
     { label: "Email", value: patient.contact_info?.email },
-    { label: "Referrer", value: patient.answers?.referring },
+    { label: "Addres", value: patient.answers.full_address || "N/A" },
+    { label: "OHIP", value: patient.answers.OHIP || "N/A" },
+    { label: "Sex at birth", value: patient.answers.gender || "N/A" },
+
+
+    // { label: "Referrer", value: patient.answers?.referring },
     { label: "Referral reason", value: patient.answers?.referral_reason },
     { label: "Partner", value: patient.partner ? "Yes" : "No" },
     {
